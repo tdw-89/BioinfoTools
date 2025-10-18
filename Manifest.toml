@@ -1,0 +1,10 @@
+# This file is machine-generated - editing it directly is not advised
+
+julia_version = "1.12.0"
+manifest_format = "2.0"
+project_hash = "e979df65e4b7d70825de4847ff9d94ac426308f6"
+
+[[deps.BioinfoTools]]
+path = "."
+uuid = "00eaa582-b862-4e15-ad52-40bcea7257db"
+version = "0.1.0"
