@@ -3,6 +3,9 @@ uuid = "00eaa582-b862-4e15-ad52-40bcea7257db"
 authors = ["thomaswolfe <thomas_wolfe@student.uml.edu> and contributors"]
 version = "0.1.0"
 
+[deps]
+BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
+
 [compat]
 julia = "1.10"
 

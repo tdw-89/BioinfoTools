@@ -1,5 +1,8 @@
 module BioinfoTools
 
-# Write your package code here.
+include("genome_types.jl")
+using .GenomeTypes
+
+export GenomeTypes
 
 end

@@ -2,9 +2,67 @@
 
 julia_version = "1.12.0"
 manifest_format = "2.0"
-project_hash = "e979df65e4b7d70825de4847ff9d94ac426308f6"
+project_hash = "b7eace55ac37cf3f72981e5d46898e80cb7a8053"
+
+[[deps.BioSequences]]
+deps = ["BioSymbols", "PrecompileTools", "Random", "Twiddle"]
+git-tree-sha1 = "3997810d996142e62aa426deed5bd858339e2332"
+uuid = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
+version = "3.5.0"
+
+[[deps.BioSymbols]]
+deps = ["PrecompileTools"]
+git-tree-sha1 = "41e42d326ff01d12167f3f8a218b318bf7429d0f"
+uuid = "3c28c6f8-a34d-59c4-9654-267d177fcfa9"
+version = "5.2.0"
 
 [[deps.BioinfoTools]]
+deps = ["BioSequences"]
 path = "."
 uuid = "00eaa582-b862-4e15-ad52-40bcea7257db"
 version = "0.1.0"
+
+[[deps.Dates]]
+deps = ["Printf"]
+uuid = "ade2ca70-3891-5945-98fb-dc099432e06a"
+version = "1.11.0"
+
+[[deps.PrecompileTools]]
+deps = ["Preferences"]
+git-tree-sha1 = "07a921781cab75691315adc645096ed5e370cb77"
+uuid = "aea7be01-6a6a-4083-8856-8a6e6704d82a"
+version = "1.3.3"
+
+[[deps.Preferences]]
+deps = ["TOML"]
+git-tree-sha1 = "0f27480397253da18fe2c12a4ba4eb9eb208bf3d"
+uuid = "21216c6a-2e73-6563-6e65-726566657250"
+version = "1.5.0"
+
+[[deps.Printf]]
+deps = ["Unicode"]
+uuid = "de0858da-6303-5e67-8744-51eddeeeb8d7"
+version = "1.11.0"
+
+[[deps.Random]]
+deps = ["SHA"]
+uuid = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+version = "1.11.0"
+
+[[deps.SHA]]
+uuid = "ea8e919c-243c-51af-8825-aaa63cd721ce"
+version = "0.7.0"
+
+[[deps.TOML]]
+deps = ["Dates"]
+uuid = "fa267f1f-6049-4f14-aa54-33bafae1ed76"
+version = "1.0.3"
+
+[[deps.Twiddle]]
+git-tree-sha1 = "29509c4862bfb5da9e76eb6937125ab93986270a"
+uuid = "7200193e-83a8-5a55-b20d-5d36d44a0795"
+version = "1.1.2"
+
+[[deps.Unicode]]
+uuid = "4ec0a83e-493e-50e2-b9ac-8f72acf5a8f5"
+version = "1.11.0"
