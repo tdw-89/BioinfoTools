@@ -1,8 +1,13 @@
 module BioinfoTools
 
 include("genome_types.jl")
-using .GenomeTypes
+include("genomic_data.jl")
+include("enrichment_utils.jl")
 
-export GenomeTypes
+using .GenomeTypes
+using .GenomicData
+using .EnrichmentUtils
+
+export GenomeTypes, GenomicData, EnrichmentUtils
 
 end
