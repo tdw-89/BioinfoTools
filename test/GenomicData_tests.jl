@@ -17,7 +17,7 @@ using Test
 end
 
 @testset "Peak binning" begin
-    peak_file = joinpath(@__DIR__, "data", "test_peak.narrowPeak")
+    peak_file = joinpath(@__DIR__, "data", "micro.narrowPeak")
     chrom_lengths_path = tempname()
     open(chrom_lengths_path, "w") do io
         write(io, "DDB0215018\t50000\n")
