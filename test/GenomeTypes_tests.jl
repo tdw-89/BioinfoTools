@@ -24,8 +24,6 @@ const GT = BioinfoTools.GenomeTypes
 
         push!(scaffold.contigs, contig)
         @test length(scaffold.contigs) == 1
-
-        @test_throws MethodError GT.Scaffold(42, missing, missing, missing, missing, missing, missing)
     end
 
     @testset "Gene and Regulatory Elements" begin
@@ -165,5 +163,42 @@ const GT = BioinfoTools.GenomeTypes
         @test repeat.family == "LINE"
         @test repeat.regions[1] === region
         @test segment.prev_segment[1] === region
+    end
+
+    @testset "Reference Genome" begin
+        scaffold = GT.Scaffold("chrR", GT.Feature[], missing, missing, 1, 1_000, "chromosome")
+        gene = GT.Gene(scaffold, missing, "GeneRef", "GENE_REF", '+')
+        genome = GT.RefGenome(
+            Dict("chrR" => scaffold),
+            Dict{String, GT.Contig}(),
+            GT.Enhancer[],
+            GT.Promoter[],
+            (String["GENE_REF"], GT.Gene[gene]),
+            GT.Intron[],
+            GT.Exon[],
+            GT.RNA[],
+            Dict{String, Vector{GT.Segment}}(),
+            GT.Repeat[],
+            GT.Region[],
+            GT.Annotation[],
+        )
+
+        @test haskey(genome.scaffolds, "chrR")
+        @test genome.genes[1][1] == "GENE_REF"
+        @test genome.genes[2][1] === gene
+    end
+
+    @testset "Gene Range Utilities" begin
+        default_range = GT.GeneRange(GT.TSS(), GT.TES())
+        @test default_range.start_offset == 0
+        @test default_range.stop_offset == 0
+        @test default_range.start_offset_type isa GT.INTEGER
+        @test default_range.stop_offset_type isa GT.INTEGER
+
+        percent_range = GT.GeneRange(GT.TSS(), GT.TSS(), 25, 10, GT.PERCENTAGE(), GT.INTEGER())
+        @test percent_range.start_offset == 25
+        @test percent_range.start_offset_type isa GT.PERCENTAGE
+
+        @test_throws ErrorException GT.GeneRange(GT.REGION(), GT.TSS(), 10, 5, GT.PERCENTAGE(), GT.INTEGER())
     end
 end

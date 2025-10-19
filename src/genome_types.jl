@@ -2,369 +2,860 @@ module GenomeTypes
 
 using BioSequences
 
-const Optional{T} = Union{Missing, T}
-const OptionalOrNothing{T} = Union{Nothing, T}
-const SignalElement = Union{UInt8, UInt16, UInt32, UInt64, Float64}
-
-"""
-    Feature
-
-Abstract supertype for all genomic entities represented in this package.
-Concrete feature types capture different biological concepts such as
-scaffolds, genes, and regulatory elements.
-"""
 abstract type Feature end
-
-"""
-    RegElement
-
-Abstract subtype of [`Feature`](@ref) for regulatory elements such as
-enhancers and promoters.
-"""
 abstract type RegElement <: Feature end
 
-const OptionalFeatureCollection = Union{Missing, AbstractVector{<:Feature}}
-const OptionalRegElementCollection = Union{Missing, AbstractVector{<:RegElement}}
-const OptionalSignalCollection =
-    OptionalOrNothing{AbstractVector{<:AbstractVector{<:SignalElement}}}
-const OptionalBitVectorCollection = OptionalOrNothing{AbstractVector{<:BitVector}}
-const OptionalSampleCollection = OptionalOrNothing{AbstractVector{<:AbstractString}}
-const OptionalAnnotationDict = Union{Missing, Dict{String, Vector{Feature}}}
+const _ScaffoldNameUnion = Union{String, Char}
+const _MaybeInt = Union{Int, Missing}
+const _MaybeString = Union{String, Missing}
+const _MaybeChar = Union{Char, Missing}
+const _MaybeFeatureVector = Union{AbstractVector{<:Feature}, Missing}
+const _MaybeRegElementVector = Union{AbstractVector{<:RegElement}, Missing}
+const _SignalCollection = Union{
+    Vector{Union{Vector{UInt8}, Vector{UInt16}, Vector{UInt32}, Vector{UInt64}, Vector{Float64}}},
+    Nothing,
+}
+const _BitSignalCollection = Union{Vector{BitVector}, Nothing}
+const _SampleCollection = Union{Vector{String}, Nothing}
+const _StringVectorMissing = Union{Vector{String}, Missing}
+const _FloatVectorMissing = Union{Vector{Float64}, Missing}
+const _SequenceOrNothing = Union{BioSequences.BioSequence, Nothing}
+const _SequenceOrMissing = Union{BioSequences.BioSequence, Missing}
+const _FeatureAnnotationDict = Union{Dict{String, Vector{Feature}}, Missing}
 
-"""
-    Scaffold{N,C,G,R,S,E,L} <: Feature
-
-Container for scaffold-level annotations and relationships between features.
-
-# Type Parameters
-- `N`: identifier type, typically `AbstractString` or `Char`.
-- `C`: collection type used for contigs (allows `missing`).
-- `G`: collection type used for genes (allows `missing`).
-- `R`: collection type used for repeats (allows `missing`).
-- `S`: coordinate type for scaffold start (allows `missing`).
-- `E`: coordinate type for scaffold end (allows `missing`).
-- `L`: descriptive level label type (allows `missing`).
-
-# Fields
-- `name::N`: scaffold identifier.
-- `contigs::C`: contigs associated with the scaffold.
-- `genes::G`: genes contained within the scaffold.
-- `repeats::R`: repetitive elements located on the scaffold.
-- `scaffold_start::S`: genomic start coordinate.
-- `scaffold_end::E`: genomic end coordinate.
-- `level::L`: assembly level or status label.
-"""
-mutable struct Scaffold{
-    N<:Union{AbstractString,Char},
-    C<:OptionalFeatureCollection,
-    G<:OptionalFeatureCollection,
-    R<:OptionalFeatureCollection,
-    S<:Optional{Integer},
-    E<:Optional{Integer},
-    L<:Optional{AbstractString},
-} <: Feature
-    name::N
-    contigs::C
-    genes::G
-    repeats::R
-    scaffold_start::S
-    scaffold_end::E
-    level::L
+mutable struct Scaffold{NameType, ContigType, GeneType, RepeatType, StartType, EndType, LevelType} <: Feature
+    name::NameType
+    contigs::ContigType
+    genes::GeneType
+    repeats::RepeatType
+    scaffold_start::StartType
+    scaffold_end::EndType
+    level::LevelType
 end
 
-"""
-    Contig{S,J,E,G,T,U} <: Feature
+function Scaffold(
+    name::Name,
+    contigs::Contigs=missing,
+    genes::Genes=missing,
+    repeats::Repeats=missing,
+    scaffold_start::Start=missing,
+    scaffold_end::End=missing,
+    level::Level=missing,
+) where {
+    Name<:_ScaffoldNameUnion,
+    Contigs<:_MaybeFeatureVector,
+    Genes<:_MaybeFeatureVector,
+    Repeats<:_MaybeFeatureVector,
+    Start<:_MaybeInt,
+    End<:_MaybeInt,
+    Level<:_MaybeString,
+}
+    Scaffold{Name, Contigs, Genes, Repeats, Start, End, Level}(
+        name,
+        contigs,
+        genes,
+        repeats,
+        scaffold_start,
+        scaffold_end,
+        level,
+    )
+end
 
-Represents a contig within a scaffold and stores related genomic features.
+const _MaybeScaffold = Union{Scaffold, Missing}
 
-# Type Parameters
-- `S`: parent scaffold reference type (allows `missing`).
-- `J`: collection of miscellaneous child features.
-- `E`: collection of enhancers.
-- `G`: collection of genes.
-- `T`: coordinate type for contig start.
-- `U`: coordinate type for contig end.
-"""
 mutable struct Contig{
-    S<:Optional{Scaffold},
-    J<:OptionalFeatureCollection,
-    E<:OptionalRegElementCollection,
-    G<:OptionalFeatureCollection,
-    T<:Optional{Integer},
-    U<:Optional{Integer},
+    ScaffoldType,
+    JunkType,
+    EnhancerType,
+    GeneType,
+    StartType,
+    EndType,
 } <: Feature
-    scaffold::S
-    junk::J
-    enhancers::E
-    genes::G
-    contig_start::T
-    contig_end::U
+    scaffold::ScaffoldType
+    junk::JunkType
+    enhancers::EnhancerType
+    genes::GeneType
+    contig_start::StartType
+    contig_end::EndType
 end
 
-"""
-    Enhancer{C} <: RegElement
-
-Regulatory enhancer linked to a parent contig.
-
-# Type Parameters
-- `C`: parent contig reference type (allows `missing`).
-"""
-struct Enhancer{C<:Optional{Contig}} <: RegElement
-    contig::C
+function Contig(
+    scaffold::ScaffoldType=missing,
+    junk::JunkType=missing,
+    enhancers::EnhancerType=missing,
+    genes::GeneType=missing,
+    contig_start::Start=missing,
+    contig_end::End=missing,
+) where {
+    ScaffoldType<:_MaybeScaffold,
+    JunkType<:_MaybeFeatureVector,
+    EnhancerType<:_MaybeFeatureVector,
+    GeneType<:_MaybeFeatureVector,
+    Start<:_MaybeInt,
+    End<:_MaybeInt,
+}
+    Contig{ScaffoldType, JunkType, EnhancerType, GeneType, Start, End}(
+        scaffold,
+        junk,
+        enhancers,
+        genes,
+        contig_start,
+        contig_end,
+    )
 end
 
-"""
-    Gene{S,C,N,I,Str,Cres,TSS,TES,Intr,Exon,CdsS,CdsE,Rna,Seg,Reg,Anno,GStart,GEnd,Seq,Sig,BinSig,Samples} <: Feature
+const _MaybeContig = Union{Contig, Missing}
 
-Encapsulates gene-level annotations, relationships, and experimental signals.
+struct Enhancer{ContigType} <: RegElement
+    contig::ContigType
+end
 
-# Fields
-- `scaffold::S`: scaffold identifier or link.
-- `contig::C`: contig identifier or link.
-- `name::N`: gene symbol or name.
-- `id::I`: stable gene identifier.
-- `strand::Str`: genomic strand (`'+'` / `'-'`).
-- `cres::Cres`: regulatory elements associated with the gene.
-- `tss::TSS`: transcription start site coordinate.
-- `tes::TES`: transcription end site coordinate.
-- `introns::Intr`: intronic segments.
-- `exons::Exon`: exonic segments.
-- `cds_start::CdsS`: coding sequence start.
-- `cds_end::CdsE`: coding sequence end.
-- `rnas::Rna`: RNA isoforms transcribed from the gene.
-- `segments::Seg`: other genomic segments linked to the gene.
-- `regions::Reg`: genomic regions overlapping the gene.
-- `annotations::Anno`: arbitrary annotation dictionary.
-- `gene_start::GStart`: genomic start coordinate.
-- `gene_end::GEnd`: genomic end coordinate.
-- `sequence::Seq`: primary sequence representation.
-- `signals::Sig`: quantitative signal tracks.
-- `binsignals::BinSig`: binned binary signal tracks.
-- `samples::Samples`: sample or condition labels.
-"""
+function Enhancer(contig::C=missing) where {C<:_MaybeContig}
+    Enhancer{C}(contig)
+end
+
+const _MaybeScaffoldOrString = Union{Scaffold, String, Missing}
+const _MaybeContigOrString = Union{Contig, String, Missing}
+
 struct Gene{
-    S<:Union{Missing,Scaffold,AbstractString},
-    C<:Union{Missing,Contig,AbstractString},
-    N<:Optional{AbstractString},
-    I<:Optional{AbstractString},
-    Str<:Optional{Char},
-    Cres<:OptionalRegElementCollection,
-    TSS<:Optional{Integer},
-    TES<:Optional{Integer},
-    Intr<:OptionalFeatureCollection,
-    Exon<:OptionalFeatureCollection,
-    CdsS<:Optional{Integer},
-    CdsE<:Optional{Integer},
-    Rna<:OptionalFeatureCollection,
-    Seg<:OptionalFeatureCollection,
-    Reg<:OptionalFeatureCollection,
-    Anno<:OptionalAnnotationDict,
-    GStart<:Optional{Integer},
-    GEnd<:Optional{Integer},
-    Seq<:OptionalOrNothing{BioSequences.BioSequence},
-    Sig<:OptionalSignalCollection,
-    BinSig<:OptionalBitVectorCollection,
-    Samples<:OptionalSampleCollection,
+    ScaffoldType,
+    ContigType,
+    NameType,
+    IdType,
+    StrandType,
+    CresType,
+    TssType,
+    TesType,
+    IntronsType,
+    ExonsType,
+    CdsStartType,
+    CdsEndType,
+    RnaType,
+    SegmentsType,
+    RegionsType,
+    AnnotationsType,
+    GeneStartType,
+    GeneEndType,
+    SequenceType,
+    SignalsType,
+    BinSignalsType,
+    SamplesType,
 } <: Feature
-    scaffold::S
-    contig::C
-    name::N
-    id::I
-    strand::Str
-    cres::Cres
-    tss::TSS
-    tes::TES
-    introns::Intr
-    exons::Exon
-    cds_start::CdsS
-    cds_end::CdsE
-    rnas::Rna
-    segments::Seg
-    regions::Reg
-    annotations::Anno
-    gene_start::GStart
-    gene_end::GEnd
-    sequence::Seq
-    signals::Sig
-    binsignals::BinSig
-    samples::Samples
+    scaffold::ScaffoldType
+    contig::ContigType
+    name::NameType
+    id::IdType
+    strand::StrandType
+    cres::CresType
+    tss::TssType
+    tes::TesType
+    introns::IntronsType
+    exons::ExonsType
+    cds_start::CdsStartType
+    cds_end::CdsEndType
+    rnas::RnaType
+    segments::SegmentsType
+    regions::RegionsType
+    annotations::AnnotationsType
+    gene_start::GeneStartType
+    gene_end::GeneEndType
+    sequence::SequenceType
+    signals::SignalsType
+    binsignals::BinSignalsType
+    samples::SamplesType
 end
 
-"""
-    Promoter{G,Str,Seg,Start,End,Seq,Sig,BinSig,Samples} <: RegElement
+function Gene(
+    scaffold::ScaffoldType=missing,
+    contig::ContigType=missing,
+    name::NameType=missing,
+    id::IdType=missing,
+    strand::StrandType=missing,
+    cres::CresType=missing,
+    tss::TssType=missing,
+    tes::TesType=missing,
+    introns::IntronsType=missing,
+    exons::ExonsType=missing,
+    cds_start::CdsStartType=missing,
+    cds_end::CdsEndType=missing,
+    rnas::RnaType=missing,
+    segments::SegmentsType=missing,
+    regions::RegionsType=missing,
+    annotations::AnnotationsType=missing,
+    gene_start::GeneStartType=missing,
+    gene_end::GeneEndType=missing,
+    sequence::SequenceType=nothing,
+    signals::SignalsType=nothing,
+    binsignals::BinSignalsType=nothing,
+    samples::SamplesType=nothing,
+) where {
+    ScaffoldType<:_MaybeScaffoldOrString,
+    ContigType<:_MaybeContigOrString,
+    NameType<:_MaybeString,
+    IdType<:_MaybeString,
+    StrandType<:_MaybeChar,
+    CresType<:_MaybeRegElementVector,
+    TssType<:_MaybeInt,
+    TesType<:_MaybeInt,
+    IntronsType<:_MaybeFeatureVector,
+    ExonsType<:_MaybeFeatureVector,
+    CdsStartType<:_MaybeInt,
+    CdsEndType<:_MaybeInt,
+    RnaType<:_MaybeFeatureVector,
+    SegmentsType<:_MaybeFeatureVector,
+    RegionsType<:_MaybeFeatureVector,
+    AnnotationsType<:_FeatureAnnotationDict,
+    GeneStartType<:_MaybeInt,
+    GeneEndType<:_MaybeInt,
+    SequenceType<:_SequenceOrNothing,
+    SignalsType<:_SignalCollection,
+    BinSignalsType<:_BitSignalCollection,
+    SamplesType<:_SampleCollection,
+}
+    Gene{
+        ScaffoldType,
+        ContigType,
+        NameType,
+        IdType,
+        StrandType,
+        CresType,
+        TssType,
+        TesType,
+        IntronsType,
+        ExonsType,
+        CdsStartType,
+        CdsEndType,
+        RnaType,
+        SegmentsType,
+        RegionsType,
+        AnnotationsType,
+        GeneStartType,
+        GeneEndType,
+        SequenceType,
+        SignalsType,
+        BinSignalsType,
+        SamplesType,
+    }(
+        scaffold,
+        contig,
+        name,
+        id,
+        strand,
+        cres,
+        tss,
+        tes,
+        introns,
+        exons,
+        cds_start,
+        cds_end,
+        rnas,
+        segments,
+        regions,
+        annotations,
+        gene_start,
+        gene_end,
+        sequence,
+        signals,
+        binsignals,
+        samples,
+    )
+end
 
-Promoter region tied to one or more genes with optional experimental signals.
-"""
+const _MaybeGeneVector = Union{AbstractVector{<:Gene}, Missing}
+
 struct Promoter{
-    G<:Optional{AbstractVector{<:Gene}},
-    Str<:Optional{Char},
-    Seg<:OptionalFeatureCollection,
-    Start<:Optional{Integer},
-    End<:Optional{Integer},
-    Seq<:OptionalOrNothing{BioSequences.BioSequence},
-    Sig<:OptionalSignalCollection,
-    BinSig<:OptionalBitVectorCollection,
-    Samples<:OptionalSampleCollection,
+    GeneType,
+    StrandType,
+    SegmentsType,
+    StartType,
+    EndType,
+    SequenceType,
+    SignalsType,
+    BinSignalsType,
+    SamplesType,
 } <: RegElement
-    genes::G
-    strand::Str
-    segments::Seg
-    promoter_start::Start
-    promoter_end::End
-    sequence::Seq
-    signals::Sig
-    binsignals::BinSig
-    samples::Samples
+    genes::GeneType
+    strand::StrandType
+    segments::SegmentsType
+    promoter_start::StartType
+    promoter_end::EndType
+    sequence::SequenceType
+    signals::SignalsType
+    binsignals::BinSignalsType
+    samples::SamplesType
 end
 
-"""
-    Intron{G,R,S,E} <: Feature
+function Promoter(
+    genes::Genes=missing,
+    strand::Strand=missing,
+    segments::Segments=missing,
+    promoter_start::Start=missing,
+    promoter_end::End=missing,
+    sequence::Sequence=nothing,
+    signals::Signals=nothing,
+    binsignals::BinSignals=nothing,
+    samples::Samples=nothing,
+) where {
+    Genes<:_MaybeGeneVector,
+    Strand<:_MaybeChar,
+    Segments<:_MaybeFeatureVector,
+    Start<:_MaybeInt,
+    End<:_MaybeInt,
+    Sequence<:_SequenceOrNothing,
+    Signals<:_SignalCollection,
+    BinSignals<:_BitSignalCollection,
+    Samples<:_SampleCollection,
+}
+    Promoter{
+        Genes,
+        Strand,
+        Segments,
+        Start,
+        End,
+        Sequence,
+        Signals,
+        BinSignals,
+        Samples,
+    }(
+        genes,
+        strand,
+        segments,
+        promoter_start,
+        promoter_end,
+        sequence,
+        signals,
+        binsignals,
+        samples,
+    )
+end
 
-Intron segment belonging to a gene or RNA transcript.
-"""
 struct Intron{
-    G<:Optional{Gene},
-    R<:Optional{Feature},
-    S<:Optional{Integer},
-    E<:Optional{Integer},
+    GeneType,
+    RnaType,
+    StartType,
+    EndType,
 } <: Feature
-    gene::G
-    rna::R
-    intron_start::S
-    intron_end::E
+    gene::GeneType
+    rna::RnaType
+    intron_start::StartType
+    intron_end::EndType
 end
 
-"""
-    Exon{G,R,S,E} <: Feature
+function Intron(
+    gene::GeneType=missing,
+    rna::RnaType=missing,
+    intron_start::Start=missing,
+    intron_end::End=missing,
+) where {
+    GeneType<:Union{Gene, Missing},
+    RnaType<:Union{Feature, Missing},
+    Start<:_MaybeInt,
+    End<:_MaybeInt,
+}
+    Intron{GeneType, RnaType, Start, End}(gene, rna, intron_start, intron_end)
+end
 
-Exon segment belonging to a gene or RNA transcript.
-"""
 struct Exon{
-    G<:Optional{Gene},
-    R<:Optional{Feature},
-    S<:Optional{Integer},
-    E<:Optional{Integer},
+    GeneType,
+    RnaType,
+    StartType,
+    EndType,
 } <: Feature
-    gene::G
-    rna::R
-    exon_start::S
-    exon_end::E
+    gene::GeneType
+    rna::RnaType
+    exon_start::StartType
+    exon_end::EndType
 end
 
-"""
-    RNA{I,T,G,E,Intr,Samples,Start,End,Expr} <: Feature
+function Exon(
+    gene::GeneType=missing,
+    rna::RnaType=missing,
+    exon_start::Start=missing,
+    exon_end::End=missing,
+) where {
+    GeneType<:Union{Gene, Missing},
+    RnaType<:Union{Feature, Missing},
+    Start<:_MaybeInt,
+    End<:_MaybeInt,
+}
+    Exon{GeneType, RnaType, Start, End}(gene, rna, exon_start, exon_end)
+end
 
-Represents an RNA transcript derived from a gene.
-"""
 struct RNA{
-    I<:Optional{AbstractString},
-    T<:Optional{AbstractString},
-    G<:Optional{Gene},
-    E<:Union{Missing, AbstractVector{<:Exon}},
-    Intr<:Union{Missing, AbstractVector{<:Intron}},
-    Samples<:Optional{AbstractVector{<:AbstractString}},
-    Start<:Optional{Integer},
-    End<:Optional{Integer},
-    Expr<:Optional{AbstractVector{<:AbstractFloat}},
+    IdType,
+    TypeType,
+    GeneType,
+    ExonType,
+    IntronType,
+    SamplesType,
+    StartType,
+    EndType,
+    ExpressionType,
 } <: Feature
-    id::I
-    type::T
-    gene::G
-    exons::E
-    introns::Intr
-    samples::Samples
-    rna_start::Start
-    rna_end::End
-    expression::Expr
+    id::IdType
+    type::TypeType
+    gene::GeneType
+    exons::ExonType
+    introns::IntronType
+    samples::SamplesType
+    rna_start::StartType
+    rna_end::EndType
+    expression::ExpressionType
 end
 
-"""
-    Annotation{E,A} <: Feature
+function RNA(
+    id::IdType=missing,
+    type::TypeType=missing,
+    gene::GeneType=missing,
+    exons::ExonType=missing,
+    introns::IntronType=missing,
+    samples::SamplesType=missing,
+    rna_start::StartType=missing,
+    rna_end::EndType=missing,
+    expression::ExpressionType=missing,
+) where {
+    IdType<:_MaybeString,
+    TypeType<:_MaybeString,
+    GeneType<:Union{Gene, Missing},
+    ExonType<:Union{AbstractVector{<:Exon}, Missing},
+    IntronType<:Union{AbstractVector{<:Intron}, Missing},
+    SamplesType<:_StringVectorMissing,
+    StartType<:_MaybeInt,
+    EndType<:_MaybeInt,
+    ExpressionType<:_FloatVectorMissing,
+}
+    RNA{
+        IdType,
+        TypeType,
+        GeneType,
+        ExonType,
+        IntronType,
+        SamplesType,
+        StartType,
+        EndType,
+        ExpressionType,
+    }(
+        id,
+        type,
+        gene,
+        exons,
+        introns,
+        samples,
+        rna_start,
+        rna_end,
+        expression,
+    )
+end
 
-Generic annotation container for grouping features by label.
-"""
 struct Annotation{
-    E<:OptionalAnnotationDict,
-    A<:AbstractString,
+    ElementType,
+    AnnotationType,
 } <: Feature
-    elements::E
-    annotation::A
+    elements::ElementType
+    annotation::AnnotationType
 end
 
-const OptionalAnnotationCollection = Union{Missing, Dict{String, Vector{Annotation}}}
+function Annotation(
+    elements::ElementsType=missing,
+    annotation::AnnotationType="",
+) where {
+    ElementsType<:_FeatureAnnotationDict,
+    AnnotationType<:AbstractString,
+}
+    Annotation{ElementsType, AnnotationType}(elements, annotation)
+end
 
-"""
-    Region{S,C,RStart,REnd,Anno,Sig,BinSig,Samples} <: Feature
+const _AnnotationDict = Union{Dict{String, Vector{Annotation}}, Missing}
 
-Arbitrary genomic region with optional annotations and signal data.
-"""
 struct Region{
-    S<:Optional{Scaffold},
-    C<:Optional{Contig},
-    RStart<:Optional{Integer},
-    REnd<:Optional{Integer},
-    Anno<:OptionalAnnotationCollection,
-    Sig<:OptionalSignalCollection,
-    BinSig<:OptionalBitVectorCollection,
-    Samples<:OptionalSampleCollection,
+    ScaffoldType,
+    ContigType,
+    StartType,
+    EndType,
+    AnnotationType,
+    SignalsType,
+    BinSignalsType,
+    SamplesType,
 } <: Feature
-    scaffold::S
-    contig::C
-    region_start::RStart
-    region_end::REnd
-    annotations::Anno
-    signals::Sig
-    binsignals::BinSig
-    samples::Samples
+    scaffold::ScaffoldType
+    contig::ContigType
+    region_start::StartType
+    region_end::EndType
+    annotations::AnnotationType
+    signals::SignalsType
+    binsignals::BinSignalsType
+    samples::SamplesType
 end
 
-"""
-    Repeat{S,C,R,F,T,Start,End,Seq,Sig,BinSig,Samples} <: Feature
+function Region(
+    scaffold::ScaffoldType=missing,
+    contig::ContigType=missing,
+    region_start::StartType=missing,
+    region_end::EndType=missing,
+    annotations::AnnotationType=missing,
+    signals::SignalsType=nothing,
+    binsignals::BinSignalsType=nothing,
+    samples::SamplesType=nothing,
+) where {
+    ScaffoldType<:_MaybeScaffold,
+    ContigType<:_MaybeContig,
+    StartType<:_MaybeInt,
+    EndType<:_MaybeInt,
+    AnnotationType<:_AnnotationDict,
+    SignalsType<:_SignalCollection,
+    BinSignalsType<:_BitSignalCollection,
+    SamplesType<:_SampleCollection,
+}
+    Region{
+        ScaffoldType,
+        ContigType,
+        StartType,
+        EndType,
+        AnnotationType,
+        SignalsType,
+        BinSignalsType,
+        SamplesType,
+    }(
+        scaffold,
+        contig,
+        region_start,
+        region_end,
+        annotations,
+        signals,
+        binsignals,
+        samples,
+    )
+end
 
-Repetitive genomic element with optional sequence and signal annotations.
-"""
+const _RegionVector = Union{AbstractVector{<:Region}, Missing}
+const _SequenceOrMissingRepeat = Union{BioSequences.BioSequence, Missing}
+
 struct Repeat{
-    S<:Optional{Scaffold},
-    C<:Optional{Contig},
-    R<:Optional{AbstractVector{<:Region}},
-    F<:Optional{AbstractString},
-    T<:Optional{AbstractString},
-    Start<:Optional{Integer},
-    End<:Optional{Integer},
-    Seq<:Optional{BioSequences.BioSequence},
-    Sig<:OptionalSignalCollection,
-    BinSig<:OptionalBitVectorCollection,
-    Samples<:OptionalSampleCollection,
+    ScaffoldType,
+    ContigType,
+    RegionType,
+    FamilyType,
+    TypeType,
+    StartType,
+    EndType,
+    SequenceType,
+    SignalsType,
+    BinSignalsType,
+    SamplesType,
 } <: Feature
-    scaffold::S
-    contig::C
-    regions::R
-    family::F
-    type::T
-    repeat_start::Start
-    repeat_end::End
-    sequence::Seq
-    signals::Sig
-    binsignals::BinSig
-    samples::Samples
+    scaffold::ScaffoldType
+    contig::ContigType
+    regions::RegionType
+    family::FamilyType
+    type::TypeType
+    repeat_start::StartType
+    repeat_end::EndType
+    sequence::SequenceType
+    signals::SignalsType
+    binsignals::BinSignalsType
+    samples::SamplesType
 end
 
-"""
-    Segment{Prev,Start,End} <: Feature
+function Repeat(
+    scaffold::ScaffoldType=missing,
+    contig::ContigType=missing,
+    regions::RegionType=missing,
+    family::FamilyType=missing,
+    type::TypeType=missing,
+    repeat_start::StartType=missing,
+    repeat_end::EndType=missing,
+    sequence::SequenceType=missing,
+    signals::SignalsType=nothing,
+    binsignals::BinSignalsType=nothing,
+    samples::SamplesType=nothing,
+) where {
+    ScaffoldType<:_MaybeScaffold,
+    ContigType<:_MaybeContig,
+    RegionType<:_RegionVector,
+    FamilyType<:_MaybeString,
+    TypeType<:_MaybeString,
+    StartType<:_MaybeInt,
+    EndType<:_MaybeInt,
+    SequenceType<:_SequenceOrMissingRepeat,
+    SignalsType<:_SignalCollection,
+    BinSignalsType<:_BitSignalCollection,
+    SamplesType<:_SampleCollection,
+}
+    Repeat{
+        ScaffoldType,
+        ContigType,
+        RegionType,
+        FamilyType,
+        TypeType,
+        StartType,
+        EndType,
+        SequenceType,
+        SignalsType,
+        BinSignalsType,
+        SamplesType,
+    }(
+        scaffold,
+        contig,
+        regions,
+        family,
+        type,
+        repeat_start,
+        repeat_end,
+        sequence,
+        signals,
+        binsignals,
+        samples,
+    )
+end
 
-Segment of genomic sequence, optionally linked to preceding segments.
-"""
 struct Segment{
-    Prev<:OptionalFeatureCollection,
-    Start<:Optional{Integer},
-    End<:Optional{Integer},
+    PrevType,
+    StartType,
+    EndType,
+    AnnotationType,
+    NextType,
+    SignalsType,
+    BinSignalsType,
+    SamplesType,
 } <: Feature
-    prev_segment::Prev
-    segment_start::Start
-    segment_end::End
+    prev_segment::PrevType
+    segment_start::StartType
+    segment_end::EndType
+    annotations::AnnotationType
+    next_segment::NextType
+    signals::SignalsType
+    binsignals::BinSignalsType
+    samples::SamplesType
 end
 
-export Feature, RegElement, Scaffold, Contig, Enhancer, Gene, Promoter,
-       Intron, Exon, RNA, Annotation, Region, Repeat, Segment
+function Segment(
+    prev_segment::PrevType=missing,
+    segment_start::StartType=missing,
+    segment_end::EndType=missing,
+    annotations::AnnotationType=missing,
+    next_segment::NextType=missing,
+    signals::SignalsType=nothing,
+    binsignals::BinSignalsType=nothing,
+    samples::SamplesType=nothing,
+) where {
+    PrevType<:_MaybeFeatureVector,
+    StartType<:_MaybeInt,
+    EndType<:_MaybeInt,
+    AnnotationType<:_AnnotationDict,
+    NextType<:_MaybeFeatureVector,
+    SignalsType<:_SignalCollection,
+    BinSignalsType<:_BitSignalCollection,
+    SamplesType<:_SampleCollection,
+}
+    Segment{
+        PrevType,
+        StartType,
+        EndType,
+        AnnotationType,
+        NextType,
+        SignalsType,
+        BinSignalsType,
+        SamplesType,
+    }(
+        prev_segment,
+        segment_start,
+        segment_end,
+        annotations,
+        next_segment,
+        signals,
+        binsignals,
+        samples,
+    )
+end
+
+mutable struct RefGenome{
+    ScaffoldDictType,
+    ContigDictType,
+    EnhancerVectorType,
+    PromoterVectorType,
+    GeneTupleType,
+    IntronVectorType,
+    ExonVectorType,
+    RnaVectorType,
+    SegmentDictType,
+    RepeatVectorType,
+    RegionVectorType,
+    AnnotationVectorType,
+}
+    scaffolds::ScaffoldDictType
+    contigs::ContigDictType
+    enhancers::EnhancerVectorType
+    promoters::PromoterVectorType
+    genes::GeneTupleType
+    introns::IntronVectorType
+    exons::ExonVectorType
+    rnas::RnaVectorType
+    segments::SegmentDictType
+    repeats::RepeatVectorType
+    regions::RegionVectorType
+    annotations::AnnotationVectorType
+end
+
+function RefGenome(
+    scaffolds::Dict{String, Scaffold},
+    contigs::Dict{String, Contig},
+    enhancers::Vector{Enhancer},
+    promoters::Vector{Promoter},
+    genes::Tuple{Vector{String}, Vector{Gene}},
+    introns::Vector{Intron},
+    exons::Vector{Exon},
+    rnas::Vector{RNA},
+    segments::Dict{String, Vector{Segment}},
+    repeats::Vector{Repeat},
+    regions::Vector{Region},
+    annotations::Vector{Annotation},
+)
+    RefGenome{
+        typeof(scaffolds),
+        typeof(contigs),
+        typeof(enhancers),
+        typeof(promoters),
+        typeof(genes),
+        typeof(introns),
+        typeof(exons),
+        typeof(rnas),
+        typeof(segments),
+        typeof(repeats),
+        typeof(regions),
+        typeof(annotations),
+    }(
+        scaffolds,
+        contigs,
+        enhancers,
+        promoters,
+        genes,
+        introns,
+        exons,
+        rnas,
+        segments,
+        repeats,
+        regions,
+        annotations,
+    )
+end
+
+RefGenome() = RefGenome(
+    Dict{String, Scaffold}(),
+    Dict{String, Contig}(),
+    Vector{Enhancer}(),
+    Vector{Promoter}(),
+    (Vector{String}(), Vector{Gene}()),
+    Vector{Intron}(),
+    Vector{Exon}(),
+    Vector{RNA}(),
+    Dict{String, Vector{Segment}}(),
+    Vector{Repeat}(),
+    Vector{Region}(),
+    Vector{Annotation}(),
+)
+
+abstract type RangeAnchor end
+struct TSS <: RangeAnchor end
+struct REGION <: RangeAnchor end
+struct TES <: RangeAnchor end
+
+abstract type OffSetType end
+struct INTEGER <: OffSetType end
+struct PERCENTAGE <: OffSetType end
+
+struct GeneRange
+    range_start::RangeAnchor
+    range_stop::RangeAnchor
+    start_offset::Int
+    stop_offset::Int
+    start_offset_type::OffSetType
+    stop_offset_type::OffSetType
+
+    function GeneRange(
+        start::RangeAnchor,
+        stop::RangeAnchor,
+        start_offset::Int,
+        stop_offset::Int,
+        start_offset_type::OffSetType,
+        stop_offset_type::OffSetType,
+    )
+        if isa(start_offset_type, PERCENTAGE) && !isa(start, TSS)
+            error()
+        end
+
+        if isa(stop_offset_type, PERCENTAGE) && !isa(stop, TSS)
+            error()
+        end
+
+        new(start, stop, start_offset, stop_offset, start_offset_type, stop_offset_type)
+    end
+end
+
+GeneRange(start::RangeAnchor, stop::RangeAnchor) =
+    GeneRange(start, stop, 0, 0, INTEGER(), INTEGER())
+
+GeneRange(start::RangeAnchor, stop::RangeAnchor, start_offset::Int, stop_offset::Int) =
+    GeneRange(start, stop, start_offset, stop_offset, INTEGER(), INTEGER())
+
+const Junk = Feature
+const mRNA = RNA
+
+Base.show(io::IO, x::Feature) = begin
+    type = typeof(x)
+    fields = fieldnames(type)
+    fields_missing = [ismissing(getfield(x, i)) for i in fields]
+    fields_present = fields[.!fields_missing]
+    fields_missing = fields[fields_missing]
+
+    if any(:id .== fields_present)
+        id = getfield(x, :id)
+        print(io, "$type: '$id', with fields: ")
+        for field in fields_present
+            print(io, "'$field' ")
+        end
+    else
+        print(io, "$type with fields: ")
+        for field in fields_present
+            print(io, "'$field' ")
+        end
+    end
+
+    print(io, "\n     missing fields: ")
+    for field in fields_missing
+        print(io, "'$field' ")
+    end
+end
+
+Base.show(io::IO, x::Vector{Feature}) = begin
+    type = typeof(x)
+    len = length(x)
+    println(io, "$type with $len items")
+end
+
+export Feature,
+       RegElement,
+       Scaffold,
+       Contig,
+       Junk,
+       Enhancer,
+       Gene,
+       Promoter,
+       mRNA,
+       Intron,
+       Exon,
+       Segment,
+       Repeat,
+       Annotation,
+       Region,
+       RNA,
+       RefGenome,
+       RangeAnchor,
+       TSS,
+       REGION,
+       TES,
+       OffSetType,
+       INTEGER,
+       PERCENTAGE,
+       GeneRange
 
 end # module

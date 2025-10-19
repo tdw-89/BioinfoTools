@@ -1,12 +1,25 @@
 name = "BioinfoTools"
 uuid = "00eaa582-b862-4e15-ad52-40bcea7257db"
-authors = ["thomaswolfe <thomas_wolfe@student.uml.edu> and contributors"]
 version = "0.1.0"
+authors = ["thomaswolfe <thomas_wolfe@student.uml.edu> and contributors"]
 
 [deps]
+BED = "8e4a8c10-cb6b-11e8-08d2-83478d609d67"
 BioSequences = "7e6ae17a-c86d-528c-b3b9-7f778a29fe59"
+CSV = "336ed68f-0bac-5ca0-87d4-7b16caf5d00b"
+CodecZlib = "944b1d66-785c-5afd-91f1-9de20f533193"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
+XAM = "d759349c-bcba-11e9-07c2-5b90f8f05f7c"
 
 [compat]
+BED = "0.3.1"
+BioSequences = "3.5.0"
+CSV = "0.10.15"
+CodecZlib = "0.7.8"
+DataFrames = "1.8.1"
+StatsBase = "0.34.6"
+XAM = "0.4.2"
 julia = "1.10"
 
 [extras]
