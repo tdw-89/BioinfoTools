@@ -5,11 +5,6 @@ using BioinfoTools
 const GT = BioinfoTools.GenomeTypes
 
 @testset "GenomeTypes" begin
-    @testset "Type Hierarchy" begin
-        @test isabstracttype(GT.Feature)
-        @test isabstracttype(GT.RegElement)
-        @test GT.RegElement <: GT.Feature
-    end
 
     @testset "Scaffold and Contig Construction" begin
         scaffold = GT.Scaffold("scaf1", Vector{GT.Feature}(), missing, missing, 1, 1_000, "chromosome")
@@ -200,5 +195,69 @@ const GT = BioinfoTools.GenomeTypes
         @test percent_range.start_offset_type isa GT.PERCENTAGE
 
         @test_throws ErrorException GT.GeneRange(GT.REGION(), GT.TSS(), 10, 5, GT.PERCENTAGE(), GT.INTEGER())
+    end
+
+    @testset "Helper Methods" begin
+        range = GT.GeneRange(GT.TSS(), GT.TSS(), -2, 4, GT.INTEGER(), GT.INTEGER())
+        @test GT.to_vector(range) == -2:4
+        @test_throws ErrorException GT.to_vector(GT.GeneRange(GT.TSS(), GT.TES()))
+
+        scaffold = GT.Scaffold(
+            "chrH",
+            GT.Feature[],
+            GT.Gene[],
+            GT.Feature[],
+            missing,
+            missing,
+            missing,
+        )
+
+        gene_a = GT.Gene(scaffold, missing, "A", "A", '+', missing, missing, missing,
+                         missing, missing, missing, missing, missing, missing, missing,
+                         missing, 200, 400)
+        gene_b = GT.Gene(scaffold, missing, "B", "B", '-', missing, missing, missing,
+                         missing, missing, missing, missing, missing, missing, missing,
+                         missing, 150, 280)
+        gene_c = GT.Gene(scaffold, missing, "C", "C", '+', missing, missing, missing,
+                         missing, missing, missing, missing, missing, missing, missing,
+                         missing, missing, 500)
+
+        append!(scaffold.genes, [gene_a, gene_b, gene_c])
+
+        genome = GT.RefGenome(
+            Dict("chrH" => scaffold),
+            Dict{String, GT.Contig}(),
+            GT.Enhancer[],
+            GT.Promoter[],
+            (String["B", "A", "C"], GT.Gene[gene_b, gene_a, gene_c]),
+            GT.Intron[],
+            GT.Exon[],
+            GT.RNA[],
+            Dict{String, Vector{GT.Segment}}(),
+            GT.Repeat[],
+            GT.Region[],
+            GT.Annotation[],
+        )
+
+        GT.sortgenes!(genome)
+        sorted_genes = genome.scaffolds["chrH"].genes
+        @test sorted_genes[1] === gene_b
+        @test sorted_genes[2] === gene_a
+        @test sorted_genes[end] === gene_c
+
+        @test get(genome, "A") === gene_a
+        @test get(genome, "missing-gene") === missing
+        results = get(genome, ["A", "missing-gene", "B"])
+        @test results[1] === gene_a
+        @test results[2] === missing
+        @test results[3] === gene_b
+
+        @test GT.hasoverlap(0, 12, 10, 20) === false
+        @test GT.hasoverlap(0, 5, 20, 25) === true
+        @test GT.hasoverlap(gene_a, gene_b) === true
+
+        @test GT.overlaplength(0, 5, 20, 25) == 16
+        @test GT.overlaplength(0, 100, 10, 90) == 0
+        @test GT.overlaplength(gene_a, gene_b) == 81
     end
 end

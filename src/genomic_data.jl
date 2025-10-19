@@ -8,78 +8,78 @@ using CodecZlib: GzipDecompressorStream
 using BED
 
 export ChromData,
-       SampleData,
-       Experiment,
-       PeakWarnings,
-       getallrecords,
-       getallcountvectors,
-       average_bam_replicate_groups,
-       average_peak_replicate_groups,
-       average_bam_replicates,
-       average_peak_replicates,
-       binpeaks,
-       binpeakshomer,
-       addtogenes!,
-       addexpression!,
-       addtorepeats!,
-       has_expr,
-       sample_to_bed_df,
-       contiguous_values,
-       addpeak!
+    SampleData,
+    Experiment,
+    PeakWarnings,
+    getallrecords,
+    getallcountvectors,
+    average_bam_replicate_groups,
+    average_peak_replicate_groups,
+    average_bam_replicates,
+    average_peak_replicates,
+    binpeaks,
+    binpeakshomer,
+    addtogenes!,
+    addexpression!,
+    addtorepeats!,
+    has_expr,
+    sample_to_bed_df,
+    contiguous_values,
+    addpeak!
 
 """
     ChromData(name, signal)
 
 Container pairing a chromosome identifier with a numeric signal vector.
 """
-mutable struct ChromData{T<:Real,V<:AbstractVector{T}}
+mutable struct ChromData{T <: Real, V <: AbstractVector{T}}
     name::String
     signal::V
 
-    function ChromData{T,V}(name::String, signal::V) where {T<:Real,V<:AbstractVector{T}}
-        return new{T,V}(name, signal)
+    function ChromData{T, V}(name::String, signal::V) where {T <: Real, V <: AbstractVector{T}}
+        return new{T, V}(name, signal)
     end
 end
 
-ChromData(name::AbstractString, signal::V) where {T<:Real,V<:AbstractVector{T}} =
-    ChromData{T,V}(String(name), signal)
+ChromData(name::AbstractString, signal::V) where {T <: Real, V <: AbstractVector{T}} =
+    ChromData{T, V}(String(name), signal)
 
 """
     SampleData(name, chroms[, n_reads])
 
 Bundle of chromosome signals for a single experimental sample.
 """
-mutable struct SampleData{T<:Real,V<:AbstractVector{T},R<:Real}
+mutable struct SampleData{T <: Real, V <: AbstractVector{T}, R <: Real}
     name::String
-    chroms::Vector{ChromData{T,V}}
+    chroms::Vector{ChromData{T, V}}
     n_reads::R
 
-    function SampleData{T,V,R}(name::String, chroms::Vector{ChromData{T,V}}, n_reads::R) where {T<:Real,V<:AbstractVector{T},R<:Real}
-        return new{T,V,R}(name, chroms, n_reads)
+    function SampleData{T, V, R}(name::String, chroms::Vector{ChromData{T, V}}, n_reads::R) where {T <: Real, V <: AbstractVector{T}, R <: Real}
+        return new{T, V, R}(name, chroms, n_reads)
     end
 end
 
-SampleData(name::AbstractString, chroms::Vector{ChromData{T,V}}, n_reads::R) where {T<:Real,V<:AbstractVector{T},R<:Real} =
-    SampleData{T,V,R}(String(name), chroms, n_reads)
-SampleData(name::AbstractString, chroms::Vector{ChromData{T,V}}) where {T<:Real,V<:AbstractVector{T}} =
-    SampleData{T,V,Int}(String(name), chroms, -1)
+SampleData(name::AbstractString, chroms::Vector{ChromData{T, V}}, n_reads::R) where {T <: Real, V <: AbstractVector{T}, R <: Real} =
+    SampleData{T, V, R}(String(name), chroms, n_reads)
+SampleData(name::AbstractString, chroms::Vector{ChromData{T, V}}) where {T <: Real, V <: AbstractVector{T}} =
+    SampleData{T, V, Int}(String(name), chroms, -1)
 
 """
     Experiment(name, samples)
 
 Collection of `SampleData` objects forming a cohesive experiment.
 """
-mutable struct Experiment{T<:Real,V<:AbstractVector{T},R<:Real}
+mutable struct Experiment{T <: Real, V <: AbstractVector{T}, R <: Real}
     name::String
-    samples::Vector{SampleData{T,V,R}}
+    samples::Vector{SampleData{T, V, R}}
 
-    function Experiment{T,V,R}(name::String, samples::Vector{SampleData{T,V,R}}) where {T<:Real,V<:AbstractVector{T},R<:Real}
-        return new{T,V,R}(name, samples)
+    function Experiment{T, V, R}(name::String, samples::Vector{SampleData{T, V, R}}) where {T <: Real, V <: AbstractVector{T}, R <: Real}
+        return new{T, V, R}(name, samples)
     end
 end
 
-Experiment(name::AbstractString, samples::Vector{SampleData{T,V,R}}) where {T<:Real,V<:AbstractVector{T},R<:Real} =
-    Experiment{T,V,R}(String(name), samples)
+Experiment(name::AbstractString, samples::Vector{SampleData{T, V, R}}) where {T <: Real, V <: AbstractVector{T}, R <: Real} =
+    Experiment{T, V, R}(String(name), samples)
 
 """
     PeakWarnings()
@@ -115,7 +115,7 @@ function _foreach_bed_record(path::AbstractString, fn::Function)
             end
         end
     else
-        reader = BED.Reader(path; index=nothing)
+        reader = BED.Reader(path; index = nothing)
         try
             for record in reader
                 fn(record)
@@ -135,7 +135,7 @@ _foreach_bed_record(fn::Function, path::AbstractString) = _foreach_bed_record(pa
 
 Load a BAM file and accumulate per-base signal. Returns `(chrom_data, total_read_count)`.
 """
-function getallrecords(bam_file_path::String; mapq_signal::Bool=false)
+function getallrecords(bam_file_path::String; mapq_signal::Bool = false)
     return open(BAM.Reader, bam_file_path) do bam_reader
         chroms = bam_reader.refseqnames
         chrom_lengths = bam_reader.refseqlens
@@ -183,9 +183,9 @@ end
 
 Apply [`getallrecords`](@ref) to each BAM in `bam_file_list` and aggregate into an `Experiment`.
 """
-function getallcountvectors(bam_file_list::Vector{String}; exp_name::String="seq_exp", mapq_signal::Bool=false)
+function getallcountvectors(bam_file_list::Vector{String}; exp_name::String = "seq_exp", mapq_signal::Bool = false)
     sample_names = basename.(bam_file_list)
-    ret_chroms, total_reads = getallrecords(bam_file_list[1]; mapq_signal=mapq_signal)
+    ret_chroms, total_reads = getallrecords(bam_file_list[1]; mapq_signal = mapq_signal)
     signal_eltype = eltype(ret_chroms[1].signal)
     signal_type = typeof(ret_chroms[1].signal)
     read_type = typeof(total_reads)
@@ -193,7 +193,7 @@ function getallcountvectors(bam_file_list::Vector{String}; exp_name::String="seq
     samples[1] = SampleData(sample_names[1], ret_chroms, total_reads)
 
     for (idx, bam_path) in enumerate(bam_file_list[2:end], 2)
-        chroms, n_reads = getallrecords(bam_path; mapq_signal=mapq_signal)
+        chroms, n_reads = getallrecords(bam_path; mapq_signal = mapq_signal)
         samples[idx] = SampleData(sample_names[idx], chroms, n_reads)
     end
 
@@ -205,18 +205,18 @@ end
 
 Average BAM replicate groups according to the provided replicate specification.
 """
-function average_bam_replicate_groups(bam_data::Experiment{T,V,R}; replicate_list::Union{String, DataFrame, Nothing}=nothing) where {T<:Real,V<:AbstractVector{T},R<:Real}
+function average_bam_replicate_groups(bam_data::Experiment{T, V, R}; replicate_list::Union{String, DataFrame, Nothing} = nothing) where {T <: Real, V <: AbstractVector{T}, R <: Real}
     n_chroms = length(bam_data.samples[1].chroms)
     @assert all(length(sample.chroms) == n_chroms for sample in bam_data.samples)
 
     if isa(replicate_list, String)
-        replicate_list = CSV.read(replicate_list, DataFrame; header=false)
+        replicate_list = CSV.read(replicate_list, DataFrame; header = false)
     elseif isnothing(replicate_list)
         sample_names = getfield.(bam_data.samples, :name)
         replicate_list = DataFrame(["$i" => sample_name for (i, sample_name) in enumerate(sample_names)])
     end
 
-    avg_samples = SampleData{Float64,Vector{Float64},Float64}[]
+    avg_samples = SampleData{Float64, Vector{Float64}, Float64}[]
     for i in 1:nrow(replicate_list)
         replicate_names = replicate_list[i, :]
         group = [sample for sample in bam_data.samples if sample.name in replicate_names]
@@ -231,15 +231,15 @@ end
 
 Average binary peak replicate groups analogous to [`average_bam_replicate_groups`](@ref).
 """
-function average_peak_replicate_groups(peak_data::Experiment{Bool,BitVector,R}; replicate_list::Union{String, DataFrame, Nothing}=nothing) where {R<:Real}
+function average_peak_replicate_groups(peak_data::Experiment{Bool, BitVector, R}; replicate_list::Union{String, DataFrame, Nothing} = nothing) where {R <: Real}
     if isa(replicate_list, String)
-        replicate_list = CSV.read(replicate_list, DataFrame; header=false)
+        replicate_list = CSV.read(replicate_list, DataFrame; header = false)
     elseif isnothing(replicate_list)
         sample_names = getfield.(peak_data.samples, :name)
         replicate_list = DataFrame(["$i" => sample_name for (i, sample_name) in enumerate(sample_names)])
     end
 
-    avg_samples = SampleData{Float64,Vector{Float64},R}[]
+    avg_samples = SampleData{Float64, Vector{Float64}, R}[]
     for i in 1:nrow(replicate_list)
         replicate_names = replicate_list[i, :]
         group = [sample for sample in peak_data.samples if sample.name in replicate_names]
@@ -254,7 +254,7 @@ end
 
 Average a set of BAM replicates after normalizing by total read count.
 """
-function average_bam_replicates(replicate_vec::Vector{SampleData{T,V,R}}) where {T<:Real,V<:AbstractVector{T},R<:Real}
+function average_bam_replicates(replicate_vec::Vector{SampleData{T, V, R}}) where {T <: Real, V <: AbstractVector{T}, R <: Real}
     count_mean = mean(getfield.(replicate_vec, :n_reads))
     count_ratios = count_mean ./ getfield.(replicate_vec, :n_reads)
     chrom_count = length(replicate_vec[1].chroms)
@@ -281,7 +281,7 @@ end
 
 Average binary peak replicates by computing per-position mean occupancy.
 """
-function average_peak_replicates(replicate_vec::Vector{SampleData{Bool,BitVector,R}}) where {R<:Real}
+function average_peak_replicates(replicate_vec::Vector{SampleData{Bool, BitVector, R}}) where {R <: Real}
     n_chroms = length(replicate_vec[1].chroms)
     @assert all(length(replicate.chroms) == n_chroms for replicate in replicate_vec) "All samples must have the same number of chromosomes"
     @assert all(all(length(replicate_vec[1].chroms[j].signal) == length(replicate.chroms[j].signal) for j in 1:n_chroms) for replicate in replicate_vec) "All samples must have the same chromosome lengths"
@@ -306,7 +306,7 @@ end
 Flag the specified range within `chrom_dict` as occupied.
 """
 function addpeak!(chrom_dict::Dict{String, BitVector}, chrom::AbstractString, peak_start::Int, peak_end::Int, warnings::PeakWarnings)
-    if haskey(chrom_dict, chrom)
+    return if haskey(chrom_dict, chrom)
         signal = chrom_dict[chrom]
         _set_peak!(signal, chrom, peak_start, peak_end, warnings)
     elseif length(chrom) > 3 && haskey(chrom_dict, chrom[4:end])
@@ -327,7 +327,7 @@ function addpeak!(chrom_dict::Dict{String, BitVector}, chrom::AbstractString, pe
 end
 
 function _set_peak!(signal::BitVector, chrom::AbstractString, peak_start::Int, peak_end::Int, warnings::PeakWarnings)
-    try
+    return try
         @inbounds signal[peak_start:peak_end] .= true
     catch BoundsError
         if warnings.switches[1]
@@ -348,18 +348,18 @@ end
 
 Convert one or more narrowPeak/BED files into an `Experiment` with binary occupancy signals.
 """
-function binpeaks(peak_files::Union{String, Vector{String}}, chrom_lengths_file::Union{String, Nothing}=nothing)
+function binpeaks(peak_files::Union{String, Vector{String}}, chrom_lengths_file::Union{String, Nothing} = nothing)
     if isa(peak_files, String)
         peak_files = [peak_files]
     end
     chrom_lengths_file === nothing && throw(ArgumentError("`chrom_lengths_file` must be provided"))
 
-    chrom_lengths_df = CSV.read(chrom_lengths_file, DataFrame; header=false)
+    chrom_lengths_df = CSV.read(chrom_lengths_file, DataFrame; header = false)
     chrom_lengths_df[!, 1] = string.(chrom_lengths_df[!, 1])
     rename!(chrom_lengths_df, ["chrom", "length"])
 
     template = Dict(String(row.chrom) => falses(row.length) for row in eachrow(chrom_lengths_df))
-    samples = Vector{SampleData{Bool,BitVector,Int}}(undef, length(peak_files))
+    samples = Vector{SampleData{Bool, BitVector, Int}}(undef, length(peak_files))
     warnings = PeakWarnings()
 
     for (idx, peak_path) in enumerate(peak_files)
@@ -383,11 +383,11 @@ end
 
 Directory wrapper for [`binpeaks(::Union{String,Vector{String}}, ...)`](@ref).
 """
-function binpeaks(narrow_peak_dir::String, chrom_lengths_file::Union{String, Nothing}=nothing)
+function binpeaks(narrow_peak_dir::String, chrom_lengths_file::Union{String, Nothing} = nothing)
     if !isdir(narrow_peak_dir)
         return binpeaks([narrow_peak_dir], chrom_lengths_file)
     end
-    peak_files = readdir(narrow_peak_dir, join=true)
+    peak_files = readdir(narrow_peak_dir, join = true)
     filter!(path -> occursin(r"\.(?:narrowPeak|bed)(?:\.gz)?$", path), peak_files)
     return binpeaks(peak_files, chrom_lengths_file)
 end
@@ -397,7 +397,7 @@ end
 
 Construct binary peak tracks from HOMER peak output.
 """
-function binpeakshomer(peak_files::Vector{String}, chrom_lengths_file::Union{String, Nothing}=nothing; gff_files::Union{String, Nothing, Vector{String}}=nothing)
+function binpeakshomer(peak_files::Vector{String}, chrom_lengths_file::Union{String, Nothing} = nothing; gff_files::Union{String, Nothing, Vector{String}} = nothing)
     chrom_lengths_df = DataFrame()
     if chrom_lengths_file === nothing
         isnothing(gff_files) && error("Must provide either a file containing chromosome lengths or a GFF file.")
@@ -407,13 +407,13 @@ function binpeakshomer(peak_files::Vector{String}, chrom_lengths_file::Union{Str
         end
         rename!(chrom_lengths_df, ["chrom", "length"])
     else
-        chrom_lengths_df = CSV.read(chrom_lengths_file, DataFrame; header=false)
+        chrom_lengths_df = CSV.read(chrom_lengths_file, DataFrame; header = false)
         chrom_lengths_df[!, 1] = string.(chrom_lengths_df[!, 1])
         rename!(chrom_lengths_df, ["chrom", "length"])
     end
 
     template = Dict(String(row.chrom) => falses(row.length) for row in eachrow(chrom_lengths_df))
-    samples = Vector{SampleData{Bool,BitVector,Int}}(undef, length(peak_files))
+    samples = Vector{SampleData{Bool, BitVector, Int}}(undef, length(peak_files))
     warnings = PeakWarnings()
 
     for (idx, peak_file) in enumerate(peak_files)
@@ -421,7 +421,7 @@ function binpeakshomer(peak_files::Vector{String}, chrom_lengths_file::Union{Str
             fill!(signal_data, false)
         end
 
-        temp_df = CSV.read(peak_file, DataFrame; header=7)
+        temp_df = CSV.read(peak_file, DataFrame; header = 7)
         filter!(row -> row."p-value vs Control" <= 0.01, temp_df)
         temp_df = temp_df[:, ["#PeakID", "chr", "start", "end"]]
         rename!(temp_df, ["peakName", "chrom", "start", "end"])
@@ -442,7 +442,7 @@ end
 
 Attach experiment signal vectors to genes stored within `genome`.
 """
-function addtogenes!(genome, experiment::Experiment{T,V,R}; peak_data::Bool=true, regions::Bool=true) where {T<:Real,V<:AbstractVector{T},R<:Real}
+function addtogenes!(genome, experiment::Experiment{T, V, R}; peak_data::Bool = true, regions::Bool = true) where {T <: Real, V <: AbstractVector{T}, R <: Real}
     if peak_data
         experiment.samples[1].chroms[1].signal isa BitVector ||
             error("If 'peak_data' is set to true, then the signal must be a BitVector")
@@ -491,6 +491,7 @@ function addtogenes!(genome, experiment::Experiment{T,V,R}; peak_data::Bool=true
             end
         end
     end
+    return
 end
 
 """
@@ -498,7 +499,7 @@ end
 
 Add expression measurements from `expr_data` into `ref_genome`.
 """
-function addexpression!(ref_genome, expr_data::DataFrame; total_expr::Bool=true)
+function addexpression!(ref_genome, expr_data::DataFrame; total_expr::Bool = true)
     for row in eachrow(expr_data)
         gene_id = row.GeneID
         gene_idx = findfirst(gene_id .== ref_genome.genes[1])
@@ -506,6 +507,7 @@ function addexpression!(ref_genome, expr_data::DataFrame; total_expr::Bool=true)
         new_rna = RNA("all_transcripts", "mRNA", ref_genome.genes[2][gene_idx], Exon[], Intron[], names(row[3:end]), missing, missing, Float64.(Vector(row[2:end])))
         pushfirst!(ref_genome.genes[2][gene_idx].rnas, new_rna)
     end
+    return
 end
 
 """
@@ -513,7 +515,7 @@ end
 
 Attach experimental signals to repeat annotations.
 """
-function addtorepeats!(genome, experiment::Experiment{T,V,R}; peak_data::Bool=false, add_to_region::Bool=false) where {T<:Real,V<:AbstractVector{T},R<:Real}
+function addtorepeats!(genome, experiment::Experiment{T, V, R}; peak_data::Bool = false, add_to_region::Bool = false) where {T <: Real, V <: AbstractVector{T}, R <: Real}
     if peak_data
         experiment.samples[1].chroms[1].signal isa BitVector ||
             error("If 'peak_data' is set to true, then the signal must be a BitVector")
@@ -562,6 +564,7 @@ function addtorepeats!(genome, experiment::Experiment{T,V,R}; peak_data::Bool=fa
             end
         end
     end
+    return
 end
 
 """
@@ -578,7 +581,7 @@ end
 
 Convert a `SampleData` into a BED-like `DataFrame`.
 """
-function sample_to_bed_df(sample::SampleData{T,V,R}) where {T<:Real,V<:AbstractVector{T},R<:Real}
+function sample_to_bed_df(sample::SampleData{T, V, R}) where {T <: Real, V <: AbstractVector{T}, R <: Real}
     chroms = String[]
     starts = Int[]
     ends = Int[]
@@ -603,7 +606,7 @@ end
 
 Return contiguous index ranges where `signal` equals (`val_complement=false`) or differs from `val`.
 """
-function contiguous_values(signal::AbstractVector{T}, val::T, val_complement::Bool=false) where {T<:Real}
+function contiguous_values(signal::AbstractVector{T}, val::T, val_complement::Bool = false) where {T <: Real}
     ranges = UnitRange{Int}[]
     start_idx = 0
     in_range = false
@@ -633,7 +636,7 @@ end
 
 Identify contiguous stretches of non-zero signal values and return `(range, value)` pairs.
 """
-function contiguous_values(signal::AbstractVector{T}) where {T<:Real}
+function contiguous_values(signal::AbstractVector{T}) where {T <: Real}
     ranges = Tuple{UnitRange{Int}, T}[]
     start_idx = 0
     in_range = false
@@ -669,14 +672,14 @@ end
 Pretty-print a summary description for `ChromData`.
 """
 function Base.show(io::IO, chrom::ChromData)
-    print(io, "Chromosome $(chrom.name) with a $(length(chrom.signal)) bp signal")
+    return print(io, "Chromosome $(chrom.name) with a $(length(chrom.signal)) bp signal")
 end
 
 """
     Base.show(io, experiment::Experiment)
 """
 function Base.show(io::IO, experiment::Experiment)
-    print(io, "Experiment '$(experiment.name)' with $(length(experiment.samples)) samples")
+    return print(io, "Experiment '$(experiment.name)' with $(length(experiment.samples)) samples")
 end
 
 """
@@ -684,7 +687,7 @@ end
 """
 function Base.show(io::IO, sample::SampleData)
     reads = sample.n_reads == -1 ? "" : " and $(sample.n_reads) reads"
-    print(io, "Sample '$(sample.name)' with $(length(sample.chroms)) sequences$reads")
+    return print(io, "Sample '$(sample.name)' with $(length(sample.chroms)) sequences$reads")
 end
 
 """

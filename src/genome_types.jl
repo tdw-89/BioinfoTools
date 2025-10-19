@@ -34,23 +34,23 @@ mutable struct Scaffold{NameType, ContigType, GeneType, RepeatType, StartType, E
 end
 
 function Scaffold(
-    name::Name,
-    contigs::Contigs=missing,
-    genes::Genes=missing,
-    repeats::Repeats=missing,
-    scaffold_start::Start=missing,
-    scaffold_end::End=missing,
-    level::Level=missing,
-) where {
-    Name<:_ScaffoldNameUnion,
-    Contigs<:_MaybeFeatureVector,
-    Genes<:_MaybeFeatureVector,
-    Repeats<:_MaybeFeatureVector,
-    Start<:_MaybeInt,
-    End<:_MaybeInt,
-    Level<:_MaybeString,
-}
-    Scaffold{Name, Contigs, Genes, Repeats, Start, End, Level}(
+        name::Name,
+        contigs::Contigs = missing,
+        genes::Genes = missing,
+        repeats::Repeats = missing,
+        scaffold_start::Start = missing,
+        scaffold_end::End = missing,
+        level::Level = missing,
+    ) where {
+        Name <: _ScaffoldNameUnion,
+        Contigs <: _MaybeFeatureVector,
+        Genes <: _MaybeFeatureVector,
+        Repeats <: _MaybeFeatureVector,
+        Start <: _MaybeInt,
+        End <: _MaybeInt,
+        Level <: _MaybeString,
+    }
+    return Scaffold{Name, Contigs, Genes, Repeats, Start, End, Level}(
         name,
         contigs,
         genes,
@@ -64,13 +64,13 @@ end
 const _MaybeScaffold = Union{Scaffold, Missing}
 
 mutable struct Contig{
-    ScaffoldType,
-    JunkType,
-    EnhancerType,
-    GeneType,
-    StartType,
-    EndType,
-} <: Feature
+        ScaffoldType,
+        JunkType,
+        EnhancerType,
+        GeneType,
+        StartType,
+        EndType,
+    } <: Feature
     scaffold::ScaffoldType
     junk::JunkType
     enhancers::EnhancerType
@@ -80,21 +80,21 @@ mutable struct Contig{
 end
 
 function Contig(
-    scaffold::ScaffoldType=missing,
-    junk::JunkType=missing,
-    enhancers::EnhancerType=missing,
-    genes::GeneType=missing,
-    contig_start::Start=missing,
-    contig_end::End=missing,
-) where {
-    ScaffoldType<:_MaybeScaffold,
-    JunkType<:_MaybeFeatureVector,
-    EnhancerType<:_MaybeFeatureVector,
-    GeneType<:_MaybeFeatureVector,
-    Start<:_MaybeInt,
-    End<:_MaybeInt,
-}
-    Contig{ScaffoldType, JunkType, EnhancerType, GeneType, Start, End}(
+        scaffold::ScaffoldType = missing,
+        junk::JunkType = missing,
+        enhancers::EnhancerType = missing,
+        genes::GeneType = missing,
+        contig_start::Start = missing,
+        contig_end::End = missing,
+    ) where {
+        ScaffoldType <: _MaybeScaffold,
+        JunkType <: _MaybeFeatureVector,
+        EnhancerType <: _MaybeFeatureVector,
+        GeneType <: _MaybeFeatureVector,
+        Start <: _MaybeInt,
+        End <: _MaybeInt,
+    }
+    return Contig{ScaffoldType, JunkType, EnhancerType, GeneType, Start, End}(
         scaffold,
         junk,
         enhancers,
@@ -110,37 +110,37 @@ struct Enhancer{ContigType} <: RegElement
     contig::ContigType
 end
 
-function Enhancer(contig::C=missing) where {C<:_MaybeContig}
-    Enhancer{C}(contig)
+function Enhancer(contig::C = missing) where {C <: _MaybeContig}
+    return Enhancer{C}(contig)
 end
 
 const _MaybeScaffoldOrString = Union{Scaffold, String, Missing}
 const _MaybeContigOrString = Union{Contig, String, Missing}
 
 struct Gene{
-    ScaffoldType,
-    ContigType,
-    NameType,
-    IdType,
-    StrandType,
-    CresType,
-    TssType,
-    TesType,
-    IntronsType,
-    ExonsType,
-    CdsStartType,
-    CdsEndType,
-    RnaType,
-    SegmentsType,
-    RegionsType,
-    AnnotationsType,
-    GeneStartType,
-    GeneEndType,
-    SequenceType,
-    SignalsType,
-    BinSignalsType,
-    SamplesType,
-} <: Feature
+        ScaffoldType,
+        ContigType,
+        NameType,
+        IdType,
+        StrandType,
+        CresType,
+        TssType,
+        TesType,
+        IntronsType,
+        ExonsType,
+        CdsStartType,
+        CdsEndType,
+        RnaType,
+        SegmentsType,
+        RegionsType,
+        AnnotationsType,
+        GeneStartType,
+        GeneEndType,
+        SequenceType,
+        SignalsType,
+        BinSignalsType,
+        SamplesType,
+    } <: Feature
     scaffold::ScaffoldType
     contig::ContigType
     name::NameType
@@ -166,53 +166,53 @@ struct Gene{
 end
 
 function Gene(
-    scaffold::ScaffoldType=missing,
-    contig::ContigType=missing,
-    name::NameType=missing,
-    id::IdType=missing,
-    strand::StrandType=missing,
-    cres::CresType=missing,
-    tss::TssType=missing,
-    tes::TesType=missing,
-    introns::IntronsType=missing,
-    exons::ExonsType=missing,
-    cds_start::CdsStartType=missing,
-    cds_end::CdsEndType=missing,
-    rnas::RnaType=missing,
-    segments::SegmentsType=missing,
-    regions::RegionsType=missing,
-    annotations::AnnotationsType=missing,
-    gene_start::GeneStartType=missing,
-    gene_end::GeneEndType=missing,
-    sequence::SequenceType=nothing,
-    signals::SignalsType=nothing,
-    binsignals::BinSignalsType=nothing,
-    samples::SamplesType=nothing,
-) where {
-    ScaffoldType<:_MaybeScaffoldOrString,
-    ContigType<:_MaybeContigOrString,
-    NameType<:_MaybeString,
-    IdType<:_MaybeString,
-    StrandType<:_MaybeChar,
-    CresType<:_MaybeRegElementVector,
-    TssType<:_MaybeInt,
-    TesType<:_MaybeInt,
-    IntronsType<:_MaybeFeatureVector,
-    ExonsType<:_MaybeFeatureVector,
-    CdsStartType<:_MaybeInt,
-    CdsEndType<:_MaybeInt,
-    RnaType<:_MaybeFeatureVector,
-    SegmentsType<:_MaybeFeatureVector,
-    RegionsType<:_MaybeFeatureVector,
-    AnnotationsType<:_FeatureAnnotationDict,
-    GeneStartType<:_MaybeInt,
-    GeneEndType<:_MaybeInt,
-    SequenceType<:_SequenceOrNothing,
-    SignalsType<:_SignalCollection,
-    BinSignalsType<:_BitSignalCollection,
-    SamplesType<:_SampleCollection,
-}
-    Gene{
+        scaffold::ScaffoldType = missing,
+        contig::ContigType = missing,
+        name::NameType = missing,
+        id::IdType = missing,
+        strand::StrandType = missing,
+        cres::CresType = missing,
+        tss::TssType = missing,
+        tes::TesType = missing,
+        introns::IntronsType = missing,
+        exons::ExonsType = missing,
+        cds_start::CdsStartType = missing,
+        cds_end::CdsEndType = missing,
+        rnas::RnaType = missing,
+        segments::SegmentsType = missing,
+        regions::RegionsType = missing,
+        annotations::AnnotationsType = missing,
+        gene_start::GeneStartType = missing,
+        gene_end::GeneEndType = missing,
+        sequence::SequenceType = nothing,
+        signals::SignalsType = nothing,
+        binsignals::BinSignalsType = nothing,
+        samples::SamplesType = nothing,
+    ) where {
+        ScaffoldType <: _MaybeScaffoldOrString,
+        ContigType <: _MaybeContigOrString,
+        NameType <: _MaybeString,
+        IdType <: _MaybeString,
+        StrandType <: _MaybeChar,
+        CresType <: _MaybeRegElementVector,
+        TssType <: _MaybeInt,
+        TesType <: _MaybeInt,
+        IntronsType <: _MaybeFeatureVector,
+        ExonsType <: _MaybeFeatureVector,
+        CdsStartType <: _MaybeInt,
+        CdsEndType <: _MaybeInt,
+        RnaType <: _MaybeFeatureVector,
+        SegmentsType <: _MaybeFeatureVector,
+        RegionsType <: _MaybeFeatureVector,
+        AnnotationsType <: _FeatureAnnotationDict,
+        GeneStartType <: _MaybeInt,
+        GeneEndType <: _MaybeInt,
+        SequenceType <: _SequenceOrNothing,
+        SignalsType <: _SignalCollection,
+        BinSignalsType <: _BitSignalCollection,
+        SamplesType <: _SampleCollection,
+    }
+    return Gene{
         ScaffoldType,
         ContigType,
         NameType,
@@ -264,16 +264,16 @@ end
 const _MaybeGeneVector = Union{AbstractVector{<:Gene}, Missing}
 
 struct Promoter{
-    GeneType,
-    StrandType,
-    SegmentsType,
-    StartType,
-    EndType,
-    SequenceType,
-    SignalsType,
-    BinSignalsType,
-    SamplesType,
-} <: RegElement
+        GeneType,
+        StrandType,
+        SegmentsType,
+        StartType,
+        EndType,
+        SequenceType,
+        SignalsType,
+        BinSignalsType,
+        SamplesType,
+    } <: RegElement
     genes::GeneType
     strand::StrandType
     segments::SegmentsType
@@ -286,27 +286,27 @@ struct Promoter{
 end
 
 function Promoter(
-    genes::Genes=missing,
-    strand::Strand=missing,
-    segments::Segments=missing,
-    promoter_start::Start=missing,
-    promoter_end::End=missing,
-    sequence::Sequence=nothing,
-    signals::Signals=nothing,
-    binsignals::BinSignals=nothing,
-    samples::Samples=nothing,
-) where {
-    Genes<:_MaybeGeneVector,
-    Strand<:_MaybeChar,
-    Segments<:_MaybeFeatureVector,
-    Start<:_MaybeInt,
-    End<:_MaybeInt,
-    Sequence<:_SequenceOrNothing,
-    Signals<:_SignalCollection,
-    BinSignals<:_BitSignalCollection,
-    Samples<:_SampleCollection,
-}
-    Promoter{
+        genes::Genes = missing,
+        strand::Strand = missing,
+        segments::Segments = missing,
+        promoter_start::Start = missing,
+        promoter_end::End = missing,
+        sequence::Sequence = nothing,
+        signals::Signals = nothing,
+        binsignals::BinSignals = nothing,
+        samples::Samples = nothing,
+    ) where {
+        Genes <: _MaybeGeneVector,
+        Strand <: _MaybeChar,
+        Segments <: _MaybeFeatureVector,
+        Start <: _MaybeInt,
+        End <: _MaybeInt,
+        Sequence <: _SequenceOrNothing,
+        Signals <: _SignalCollection,
+        BinSignals <: _BitSignalCollection,
+        Samples <: _SampleCollection,
+    }
+    return Promoter{
         Genes,
         Strand,
         Segments,
@@ -330,11 +330,11 @@ function Promoter(
 end
 
 struct Intron{
-    GeneType,
-    RnaType,
-    StartType,
-    EndType,
-} <: Feature
+        GeneType,
+        RnaType,
+        StartType,
+        EndType,
+    } <: Feature
     gene::GeneType
     rna::RnaType
     intron_start::StartType
@@ -342,25 +342,25 @@ struct Intron{
 end
 
 function Intron(
-    gene::GeneType=missing,
-    rna::RnaType=missing,
-    intron_start::Start=missing,
-    intron_end::End=missing,
-) where {
-    GeneType<:Union{Gene, Missing},
-    RnaType<:Union{Feature, Missing},
-    Start<:_MaybeInt,
-    End<:_MaybeInt,
-}
-    Intron{GeneType, RnaType, Start, End}(gene, rna, intron_start, intron_end)
+        gene::GeneType = missing,
+        rna::RnaType = missing,
+        intron_start::Start = missing,
+        intron_end::End = missing,
+    ) where {
+        GeneType <: Union{Gene, Missing},
+        RnaType <: Union{Feature, Missing},
+        Start <: _MaybeInt,
+        End <: _MaybeInt,
+    }
+    return Intron{GeneType, RnaType, Start, End}(gene, rna, intron_start, intron_end)
 end
 
 struct Exon{
-    GeneType,
-    RnaType,
-    StartType,
-    EndType,
-} <: Feature
+        GeneType,
+        RnaType,
+        StartType,
+        EndType,
+    } <: Feature
     gene::GeneType
     rna::RnaType
     exon_start::StartType
@@ -368,30 +368,30 @@ struct Exon{
 end
 
 function Exon(
-    gene::GeneType=missing,
-    rna::RnaType=missing,
-    exon_start::Start=missing,
-    exon_end::End=missing,
-) where {
-    GeneType<:Union{Gene, Missing},
-    RnaType<:Union{Feature, Missing},
-    Start<:_MaybeInt,
-    End<:_MaybeInt,
-}
-    Exon{GeneType, RnaType, Start, End}(gene, rna, exon_start, exon_end)
+        gene::GeneType = missing,
+        rna::RnaType = missing,
+        exon_start::Start = missing,
+        exon_end::End = missing,
+    ) where {
+        GeneType <: Union{Gene, Missing},
+        RnaType <: Union{Feature, Missing},
+        Start <: _MaybeInt,
+        End <: _MaybeInt,
+    }
+    return Exon{GeneType, RnaType, Start, End}(gene, rna, exon_start, exon_end)
 end
 
 struct RNA{
-    IdType,
-    TypeType,
-    GeneType,
-    ExonType,
-    IntronType,
-    SamplesType,
-    StartType,
-    EndType,
-    ExpressionType,
-} <: Feature
+        IdType,
+        TypeType,
+        GeneType,
+        ExonType,
+        IntronType,
+        SamplesType,
+        StartType,
+        EndType,
+        ExpressionType,
+    } <: Feature
     id::IdType
     type::TypeType
     gene::GeneType
@@ -404,27 +404,27 @@ struct RNA{
 end
 
 function RNA(
-    id::IdType=missing,
-    type::TypeType=missing,
-    gene::GeneType=missing,
-    exons::ExonType=missing,
-    introns::IntronType=missing,
-    samples::SamplesType=missing,
-    rna_start::StartType=missing,
-    rna_end::EndType=missing,
-    expression::ExpressionType=missing,
-) where {
-    IdType<:_MaybeString,
-    TypeType<:_MaybeString,
-    GeneType<:Union{Gene, Missing},
-    ExonType<:Union{AbstractVector{<:Exon}, Missing},
-    IntronType<:Union{AbstractVector{<:Intron}, Missing},
-    SamplesType<:_StringVectorMissing,
-    StartType<:_MaybeInt,
-    EndType<:_MaybeInt,
-    ExpressionType<:_FloatVectorMissing,
-}
-    RNA{
+        id::IdType = missing,
+        type::TypeType = missing,
+        gene::GeneType = missing,
+        exons::ExonType = missing,
+        introns::IntronType = missing,
+        samples::SamplesType = missing,
+        rna_start::StartType = missing,
+        rna_end::EndType = missing,
+        expression::ExpressionType = missing,
+    ) where {
+        IdType <: _MaybeString,
+        TypeType <: _MaybeString,
+        GeneType <: Union{Gene, Missing},
+        ExonType <: Union{AbstractVector{<:Exon}, Missing},
+        IntronType <: Union{AbstractVector{<:Intron}, Missing},
+        SamplesType <: _StringVectorMissing,
+        StartType <: _MaybeInt,
+        EndType <: _MaybeInt,
+        ExpressionType <: _FloatVectorMissing,
+    }
+    return RNA{
         IdType,
         TypeType,
         GeneType,
@@ -448,35 +448,35 @@ function RNA(
 end
 
 struct Annotation{
-    ElementType,
-    AnnotationType,
-} <: Feature
+        ElementType,
+        AnnotationType,
+    } <: Feature
     elements::ElementType
     annotation::AnnotationType
 end
 
 function Annotation(
-    elements::ElementsType=missing,
-    annotation::AnnotationType="",
-) where {
-    ElementsType<:_FeatureAnnotationDict,
-    AnnotationType<:AbstractString,
-}
-    Annotation{ElementsType, AnnotationType}(elements, annotation)
+        elements::ElementsType = missing,
+        annotation::AnnotationType = "",
+    ) where {
+        ElementsType <: _FeatureAnnotationDict,
+        AnnotationType <: AbstractString,
+    }
+    return Annotation{ElementsType, AnnotationType}(elements, annotation)
 end
 
 const _AnnotationDict = Union{Dict{String, Vector{Annotation}}, Missing}
 
 struct Region{
-    ScaffoldType,
-    ContigType,
-    StartType,
-    EndType,
-    AnnotationType,
-    SignalsType,
-    BinSignalsType,
-    SamplesType,
-} <: Feature
+        ScaffoldType,
+        ContigType,
+        StartType,
+        EndType,
+        AnnotationType,
+        SignalsType,
+        BinSignalsType,
+        SamplesType,
+    } <: Feature
     scaffold::ScaffoldType
     contig::ContigType
     region_start::StartType
@@ -488,25 +488,25 @@ struct Region{
 end
 
 function Region(
-    scaffold::ScaffoldType=missing,
-    contig::ContigType=missing,
-    region_start::StartType=missing,
-    region_end::EndType=missing,
-    annotations::AnnotationType=missing,
-    signals::SignalsType=nothing,
-    binsignals::BinSignalsType=nothing,
-    samples::SamplesType=nothing,
-) where {
-    ScaffoldType<:_MaybeScaffold,
-    ContigType<:_MaybeContig,
-    StartType<:_MaybeInt,
-    EndType<:_MaybeInt,
-    AnnotationType<:_AnnotationDict,
-    SignalsType<:_SignalCollection,
-    BinSignalsType<:_BitSignalCollection,
-    SamplesType<:_SampleCollection,
-}
-    Region{
+        scaffold::ScaffoldType = missing,
+        contig::ContigType = missing,
+        region_start::StartType = missing,
+        region_end::EndType = missing,
+        annotations::AnnotationType = missing,
+        signals::SignalsType = nothing,
+        binsignals::BinSignalsType = nothing,
+        samples::SamplesType = nothing,
+    ) where {
+        ScaffoldType <: _MaybeScaffold,
+        ContigType <: _MaybeContig,
+        StartType <: _MaybeInt,
+        EndType <: _MaybeInt,
+        AnnotationType <: _AnnotationDict,
+        SignalsType <: _SignalCollection,
+        BinSignalsType <: _BitSignalCollection,
+        SamplesType <: _SampleCollection,
+    }
+    return Region{
         ScaffoldType,
         ContigType,
         StartType,
@@ -531,18 +531,18 @@ const _RegionVector = Union{AbstractVector{<:Region}, Missing}
 const _SequenceOrMissingRepeat = Union{BioSequences.BioSequence, Missing}
 
 struct Repeat{
-    ScaffoldType,
-    ContigType,
-    RegionType,
-    FamilyType,
-    TypeType,
-    StartType,
-    EndType,
-    SequenceType,
-    SignalsType,
-    BinSignalsType,
-    SamplesType,
-} <: Feature
+        ScaffoldType,
+        ContigType,
+        RegionType,
+        FamilyType,
+        TypeType,
+        StartType,
+        EndType,
+        SequenceType,
+        SignalsType,
+        BinSignalsType,
+        SamplesType,
+    } <: Feature
     scaffold::ScaffoldType
     contig::ContigType
     regions::RegionType
@@ -557,31 +557,31 @@ struct Repeat{
 end
 
 function Repeat(
-    scaffold::ScaffoldType=missing,
-    contig::ContigType=missing,
-    regions::RegionType=missing,
-    family::FamilyType=missing,
-    type::TypeType=missing,
-    repeat_start::StartType=missing,
-    repeat_end::EndType=missing,
-    sequence::SequenceType=missing,
-    signals::SignalsType=nothing,
-    binsignals::BinSignalsType=nothing,
-    samples::SamplesType=nothing,
-) where {
-    ScaffoldType<:_MaybeScaffold,
-    ContigType<:_MaybeContig,
-    RegionType<:_RegionVector,
-    FamilyType<:_MaybeString,
-    TypeType<:_MaybeString,
-    StartType<:_MaybeInt,
-    EndType<:_MaybeInt,
-    SequenceType<:_SequenceOrMissingRepeat,
-    SignalsType<:_SignalCollection,
-    BinSignalsType<:_BitSignalCollection,
-    SamplesType<:_SampleCollection,
-}
-    Repeat{
+        scaffold::ScaffoldType = missing,
+        contig::ContigType = missing,
+        regions::RegionType = missing,
+        family::FamilyType = missing,
+        type::TypeType = missing,
+        repeat_start::StartType = missing,
+        repeat_end::EndType = missing,
+        sequence::SequenceType = missing,
+        signals::SignalsType = nothing,
+        binsignals::BinSignalsType = nothing,
+        samples::SamplesType = nothing,
+    ) where {
+        ScaffoldType <: _MaybeScaffold,
+        ContigType <: _MaybeContig,
+        RegionType <: _RegionVector,
+        FamilyType <: _MaybeString,
+        TypeType <: _MaybeString,
+        StartType <: _MaybeInt,
+        EndType <: _MaybeInt,
+        SequenceType <: _SequenceOrMissingRepeat,
+        SignalsType <: _SignalCollection,
+        BinSignalsType <: _BitSignalCollection,
+        SamplesType <: _SampleCollection,
+    }
+    return Repeat{
         ScaffoldType,
         ContigType,
         RegionType,
@@ -609,15 +609,15 @@ function Repeat(
 end
 
 struct Segment{
-    PrevType,
-    StartType,
-    EndType,
-    AnnotationType,
-    NextType,
-    SignalsType,
-    BinSignalsType,
-    SamplesType,
-} <: Feature
+        PrevType,
+        StartType,
+        EndType,
+        AnnotationType,
+        NextType,
+        SignalsType,
+        BinSignalsType,
+        SamplesType,
+    } <: Feature
     prev_segment::PrevType
     segment_start::StartType
     segment_end::EndType
@@ -629,25 +629,25 @@ struct Segment{
 end
 
 function Segment(
-    prev_segment::PrevType=missing,
-    segment_start::StartType=missing,
-    segment_end::EndType=missing,
-    annotations::AnnotationType=missing,
-    next_segment::NextType=missing,
-    signals::SignalsType=nothing,
-    binsignals::BinSignalsType=nothing,
-    samples::SamplesType=nothing,
-) where {
-    PrevType<:_MaybeFeatureVector,
-    StartType<:_MaybeInt,
-    EndType<:_MaybeInt,
-    AnnotationType<:_AnnotationDict,
-    NextType<:_MaybeFeatureVector,
-    SignalsType<:_SignalCollection,
-    BinSignalsType<:_BitSignalCollection,
-    SamplesType<:_SampleCollection,
-}
-    Segment{
+        prev_segment::PrevType = missing,
+        segment_start::StartType = missing,
+        segment_end::EndType = missing,
+        annotations::AnnotationType = missing,
+        next_segment::NextType = missing,
+        signals::SignalsType = nothing,
+        binsignals::BinSignalsType = nothing,
+        samples::SamplesType = nothing,
+    ) where {
+        PrevType <: _MaybeFeatureVector,
+        StartType <: _MaybeInt,
+        EndType <: _MaybeInt,
+        AnnotationType <: _AnnotationDict,
+        NextType <: _MaybeFeatureVector,
+        SignalsType <: _SignalCollection,
+        BinSignalsType <: _BitSignalCollection,
+        SamplesType <: _SampleCollection,
+    }
+    return Segment{
         PrevType,
         StartType,
         EndType,
@@ -669,19 +669,19 @@ function Segment(
 end
 
 mutable struct RefGenome{
-    ScaffoldDictType,
-    ContigDictType,
-    EnhancerVectorType,
-    PromoterVectorType,
-    GeneTupleType,
-    IntronVectorType,
-    ExonVectorType,
-    RnaVectorType,
-    SegmentDictType,
-    RepeatVectorType,
-    RegionVectorType,
-    AnnotationVectorType,
-}
+        ScaffoldDictType,
+        ContigDictType,
+        EnhancerVectorType,
+        PromoterVectorType,
+        GeneTupleType,
+        IntronVectorType,
+        ExonVectorType,
+        RnaVectorType,
+        SegmentDictType,
+        RepeatVectorType,
+        RegionVectorType,
+        AnnotationVectorType,
+    }
     scaffolds::ScaffoldDictType
     contigs::ContigDictType
     enhancers::EnhancerVectorType
@@ -697,20 +697,20 @@ mutable struct RefGenome{
 end
 
 function RefGenome(
-    scaffolds::Dict{String, Scaffold},
-    contigs::Dict{String, Contig},
-    enhancers::Vector{Enhancer},
-    promoters::Vector{Promoter},
-    genes::Tuple{Vector{String}, Vector{Gene}},
-    introns::Vector{Intron},
-    exons::Vector{Exon},
-    rnas::Vector{RNA},
-    segments::Dict{String, Vector{Segment}},
-    repeats::Vector{Repeat},
-    regions::Vector{Region},
-    annotations::Vector{Annotation},
-)
-    RefGenome{
+        scaffolds::Dict{String, Scaffold},
+        contigs::Dict{String, Contig},
+        enhancers::Vector{Enhancer},
+        promoters::Vector{Promoter},
+        genes::Tuple{Vector{String}, Vector{Gene}},
+        introns::Vector{Intron},
+        exons::Vector{Exon},
+        rnas::Vector{RNA},
+        segments::Dict{String, Vector{Segment}},
+        repeats::Vector{Repeat},
+        regions::Vector{Region},
+        annotations::Vector{Annotation},
+    )
+    return RefGenome{
         typeof(scaffolds),
         typeof(contigs),
         typeof(enhancers),
@@ -772,13 +772,13 @@ struct GeneRange
     stop_offset_type::OffSetType
 
     function GeneRange(
-        start::RangeAnchor,
-        stop::RangeAnchor,
-        start_offset::Int,
-        stop_offset::Int,
-        start_offset_type::OffSetType,
-        stop_offset_type::OffSetType,
-    )
+            start::RangeAnchor,
+            stop::RangeAnchor,
+            start_offset::Int,
+            stop_offset::Int,
+            start_offset_type::OffSetType,
+            stop_offset_type::OffSetType,
+        )
         if isa(start_offset_type, PERCENTAGE) && !isa(start, TSS)
             error()
         end
@@ -787,7 +787,7 @@ struct GeneRange
             error()
         end
 
-        new(start, stop, start_offset, stop_offset, start_offset_type, stop_offset_type)
+        return new(start, stop, start_offset, stop_offset, start_offset_type, stop_offset_type)
     end
 end
 
@@ -799,6 +799,143 @@ GeneRange(start::RangeAnchor, stop::RangeAnchor, start_offset::Int, stop_offset:
 
 const Junk = Feature
 const mRNA = RNA
+
+#= HELPER METHODS =#
+
+"""
+    to_vector(gene_range::GeneRange)
+
+Return the offset range encoded by `gene_range` as a `UnitRange{Int}`.
+
+This helper expects identical start and stop anchors; otherwise it throws
+an error to match the original behaviour of this utility.
+"""
+function to_vector(gene_range::GeneRange)
+    start_anchor = gene_range.range_start
+    end_anchor = gene_range.range_stop
+
+    if start_anchor != end_anchor
+
+        error("Must supply a specific gene if start and end anchors for the GeneRange are different.")
+    end
+
+    return gene_range.start_offset:gene_range.stop_offset
+end
+
+"""
+    sortgenes!(ref_genome::RefGenome)
+
+Sort the genes stored on each scaffold within `ref_genome` by
+`gene_start`, pushing entries with missing coordinates to the end.
+If no scaffold information is available, a warning is emitted and the
+genome is left unchanged. The function mutates `ref_genome` in place and
+returns nothing.
+"""
+function sortgenes!(ref_genome::RefGenome)
+
+    return if isempty(ref_genome.scaffolds)
+
+        @warn "No scaffold/chromosome information.\nTreating all genes as existing on a single chromosome"
+        # TODO: implement
+    else
+
+        for scaffold in values(ref_genome.scaffolds)
+
+            genes = scaffold.genes
+            if genes === missing
+                continue
+            end
+            sort!(
+                genes;
+                by = gene -> coalesce(gene.gene_start, typemax(Int)),
+            )
+        end
+    end
+end
+
+"""
+    Base.get(genome::RefGenome, gene_id::AbstractString)
+
+Look up the gene matching `gene_id` within `genome`. Returns the matching
+`Gene` instance or `missing` if the identifier is not present.
+"""
+function Base.get(genome::RefGenome, gene_id::S) where {S <: AbstractString}
+
+    gene_ind = findfirst(genome.genes[1] .== gene_id)
+
+    if isnothing(gene_ind)
+
+        return missing
+    else
+
+        return genome.genes[2][gene_ind]
+    end
+end
+
+"""
+    Base.get(genome::RefGenome, gene_ids::Vector{<:AbstractString})
+
+Return a vector of genes corresponding to each identifier in `gene_ids`,
+preserving order. Missing identifiers yield `missing` in the result.
+"""
+function Base.get(genome::RefGenome, gene_ids::Vector{S}) where {S <: AbstractString}
+
+    return_list = Vector{Union{Gene, Missing}}(undef, length(gene_ids))
+
+    for (i, id) in enumerate(gene_ids)
+
+        return_list[i] = get(genome, id)
+    end
+
+    return return_list
+end
+
+# Gene
+
+"""
+    hasoverlap(first_start::Int, second_start::Int, first_end::Int, second_end::Int)
+    hasoverlap(geneA::Gene, geneB::Gene)
+
+Return `true` if the supplied intervals overlap, `false` otherwise.
+Gene overloads use `gene_start` and `gene_end` for the comparison.
+"""
+function hasoverlap(first_start::Int, second_start::Int, first_end::Int, second_end::Int)
+
+    if (first_end <= second_start) || (second_end <= first_start)
+
+        return false
+    end
+
+    return true
+end
+
+function hasoverlap(geneA::Gene, geneB::Gene)
+
+    return hasoverlap(geneA.gene_start, geneB.gene_start, geneA.gene_end, geneB.gene_end)
+end
+
+"""
+    overlaplength(first_start::Int, second_start::Int, first_end::Int, second_end::Int)
+    overlaplength(geneA::Gene, geneB::Gene)
+
+Compute the length of the intersection between two intervals, returning
+`0` when they do not overlap. Gene overloads rely on `gene_start` and
+`gene_end` fields for the calculation.
+"""
+function overlaplength(first_start::Int, second_start::Int, first_end::Int, second_end::Int)
+
+    if !hasoverlap(first_start, second_start, first_end, second_end)
+
+        return 0
+    end
+
+    return max((min(first_end, second_end) - max(first_start, second_start)) + 1, 0)
+end
+
+function overlaplength(geneA::Gene, geneB::Gene)
+
+    return overlaplength(geneA.gene_start, geneB.gene_start, geneA.gene_end, geneB.gene_end)
+end
 
 Base.show(io::IO, x::Feature) = begin
     type = typeof(x)
@@ -833,29 +970,29 @@ Base.show(io::IO, x::Vector{Feature}) = begin
 end
 
 export Feature,
-       RegElement,
-       Scaffold,
-       Contig,
-       Junk,
-       Enhancer,
-       Gene,
-       Promoter,
-       mRNA,
-       Intron,
-       Exon,
-       Segment,
-       Repeat,
-       Annotation,
-       Region,
-       RNA,
-       RefGenome,
-       RangeAnchor,
-       TSS,
-       REGION,
-       TES,
-       OffSetType,
-       INTEGER,
-       PERCENTAGE,
-       GeneRange
+    RegElement,
+    Scaffold,
+    Contig,
+    Junk,
+    Enhancer,
+    Gene,
+    Promoter,
+    mRNA,
+    Intron,
+    Exon,
+    Segment,
+    Repeat,
+    Annotation,
+    Region,
+    RNA,
+    RefGenome,
+    RangeAnchor,
+    TSS,
+    REGION,
+    TES,
+    OffSetType,
+    INTEGER,
+    PERCENTAGE,
+    GeneRange
 
 end # module
