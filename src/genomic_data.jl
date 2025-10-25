@@ -316,7 +316,7 @@ function binpeaks(peak_files::Union{String, Vector{String}}, chrom_lengths_file:
 end
 """
     binpeaks(narrow_peak_dir, chrom_lengths_file)
-Directory wrapper for [`binpeaks(::Union{String,Vector{String}}, ...)`](@ref).
+Directory wrapper for `binpeaks(::Union{String,Vector{String}}, ...)`.
 """
 function binpeaks(narrow_peak_dir::String, chrom_lengths_file::Union{String, Nothing} = nothing)
     if !isdir(narrow_peak_dir)

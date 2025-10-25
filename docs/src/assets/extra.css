@@ -1,0 +1,60 @@
+:root {
+  --bio-accent: #14746f;
+  --bio-accent-light: #23b5a9;
+  --bio-background: #f6faf9;
+}
+
+body {
+  font-family: "Inter", "Segoe UI", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+  background-color: var(--bio-background);
+  line-height: 1.65;
+}
+
+main h1,
+main h2,
+main h3 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+blockquote {
+  border-left: 4px solid var(--bio-accent);
+  background: #ffffff;
+  padding: 0.75rem 1.25rem;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
+
+pre code {
+  border-radius: 0.4rem;
+  border-left: 4px solid var(--bio-accent-light);
+}
+
+table {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.05);
+}
+
+.admonition-title {
+  background-color: var(--bio-accent);
+}
+
+.admonition note,
+.admonition tip {
+  border-color: var(--bio-accent-light);
+}
+
+code {
+  font-size: 0.95rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  body {
+    background-color: #0f111a;
+    color: #f2f5f4;
+  }
+  blockquote {
+    background: #121424;
+  }
+  pre code {
+    border-left-color: var(--bio-accent);
+  }
+}
