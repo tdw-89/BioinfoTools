@@ -6,4 +6,5 @@ using Test
     include("GenomicData_tests.jl")
     include("EnrichmentUtils_tests.jl")
     include("LoadGFF_tests.jl")
+    include("ParalogUtils_tests.jl")
 end
