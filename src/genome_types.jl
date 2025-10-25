@@ -1,10 +1,7 @@
 module GenomeTypes
-
 using BioSequences
-
 abstract type Feature end
 abstract type RegElement <: Feature end
-
 const _ScaffoldNameUnion = Union{String, Char}
 const _MaybeInt = Union{Int, Missing}
 const _MaybeString = Union{String, Missing}
@@ -22,7 +19,6 @@ const _FloatVectorMissing = Union{Vector{Float64}, Missing}
 const _SequenceOrNothing = Union{BioSequences.BioSequence, Nothing}
 const _SequenceOrMissing = Union{BioSequences.BioSequence, Missing}
 const _FeatureAnnotationDict = Union{Dict{String, Vector{Feature}}, Missing}
-
 mutable struct Scaffold{NameType, ContigType, GeneType, RepeatType, StartType, EndType, LevelType} <: Feature
     name::NameType
     contigs::ContigType
@@ -32,7 +28,6 @@ mutable struct Scaffold{NameType, ContigType, GeneType, RepeatType, StartType, E
     scaffold_end::EndType
     level::LevelType
 end
-
 function Scaffold(
         name::Name,
         contigs::Contigs = missing,
@@ -60,9 +55,7 @@ function Scaffold(
         level,
     )
 end
-
 const _MaybeScaffold = Union{Scaffold, Missing}
-
 mutable struct Contig{
         ScaffoldType,
         JunkType,
@@ -78,7 +71,6 @@ mutable struct Contig{
     contig_start::StartType
     contig_end::EndType
 end
-
 function Contig(
         scaffold::ScaffoldType = missing,
         junk::JunkType = missing,
@@ -103,20 +95,15 @@ function Contig(
         contig_end,
     )
 end
-
 const _MaybeContig = Union{Contig, Missing}
-
 struct Enhancer{ContigType} <: RegElement
     contig::ContigType
 end
-
 function Enhancer(contig::C = missing) where {C <: _MaybeContig}
     return Enhancer{C}(contig)
 end
-
 const _MaybeScaffoldOrString = Union{Scaffold, String, Missing}
 const _MaybeContigOrString = Union{Contig, String, Missing}
-
 struct Gene{
         ScaffoldType,
         ContigType,
@@ -164,7 +151,6 @@ struct Gene{
     binsignals::BinSignalsType
     samples::SamplesType
 end
-
 function Gene(
         scaffold::ScaffoldType = missing,
         contig::ContigType = missing,
@@ -260,9 +246,7 @@ function Gene(
         samples,
     )
 end
-
 const _MaybeGeneVector = Union{AbstractVector{<:Gene}, Missing}
-
 struct Promoter{
         GeneType,
         StrandType,
@@ -284,7 +268,6 @@ struct Promoter{
     binsignals::BinSignalsType
     samples::SamplesType
 end
-
 function Promoter(
         genes::Genes = missing,
         strand::Strand = missing,
@@ -328,7 +311,6 @@ function Promoter(
         samples,
     )
 end
-
 struct Intron{
         GeneType,
         RnaType,
@@ -340,7 +322,6 @@ struct Intron{
     intron_start::StartType
     intron_end::EndType
 end
-
 function Intron(
         gene::GeneType = missing,
         rna::RnaType = missing,
@@ -354,7 +335,6 @@ function Intron(
     }
     return Intron{GeneType, RnaType, Start, End}(gene, rna, intron_start, intron_end)
 end
-
 struct Exon{
         GeneType,
         RnaType,
@@ -366,7 +346,6 @@ struct Exon{
     exon_start::StartType
     exon_end::EndType
 end
-
 function Exon(
         gene::GeneType = missing,
         rna::RnaType = missing,
@@ -380,7 +359,6 @@ function Exon(
     }
     return Exon{GeneType, RnaType, Start, End}(gene, rna, exon_start, exon_end)
 end
-
 struct RNA{
         IdType,
         TypeType,
@@ -402,7 +380,6 @@ struct RNA{
     rna_end::EndType
     expression::ExpressionType
 end
-
 function RNA(
         id::IdType = missing,
         type::TypeType = missing,
@@ -446,7 +423,6 @@ function RNA(
         expression,
     )
 end
-
 struct Annotation{
         ElementType,
         AnnotationType,
@@ -454,7 +430,6 @@ struct Annotation{
     elements::ElementType
     annotation::AnnotationType
 end
-
 function Annotation(
         elements::ElementsType = missing,
         annotation::AnnotationType = "",
@@ -464,9 +439,7 @@ function Annotation(
     }
     return Annotation{ElementsType, AnnotationType}(elements, annotation)
 end
-
 const _AnnotationDict = Union{Dict{String, Vector{Annotation}}, Missing}
-
 struct Region{
         ScaffoldType,
         ContigType,
@@ -486,7 +459,6 @@ struct Region{
     binsignals::BinSignalsType
     samples::SamplesType
 end
-
 function Region(
         scaffold::ScaffoldType = missing,
         contig::ContigType = missing,
@@ -526,10 +498,8 @@ function Region(
         samples,
     )
 end
-
 const _RegionVector = Union{AbstractVector{<:Region}, Missing}
 const _SequenceOrMissingRepeat = Union{BioSequences.BioSequence, Missing}
-
 struct Repeat{
         ScaffoldType,
         ContigType,
@@ -555,7 +525,6 @@ struct Repeat{
     binsignals::BinSignalsType
     samples::SamplesType
 end
-
 function Repeat(
         scaffold::ScaffoldType = missing,
         contig::ContigType = missing,
@@ -607,7 +576,6 @@ function Repeat(
         samples,
     )
 end
-
 struct Segment{
         PrevType,
         StartType,
@@ -627,7 +595,6 @@ struct Segment{
     binsignals::BinSignalsType
     samples::SamplesType
 end
-
 function Segment(
         prev_segment::PrevType = missing,
         segment_start::StartType = missing,
@@ -667,7 +634,6 @@ function Segment(
         samples,
     )
 end
-
 mutable struct RefGenome{
         ScaffoldDictType,
         ContigDictType,
@@ -695,7 +661,6 @@ mutable struct RefGenome{
     regions::RegionVectorType
     annotations::AnnotationVectorType
 end
-
 function RefGenome(
         scaffolds::Dict{String, Scaffold},
         contigs::Dict{String, Contig},
@@ -738,7 +703,6 @@ function RefGenome(
         annotations,
     )
 end
-
 RefGenome() = RefGenome(
     Dict{String, Scaffold}(),
     Dict{String, Contig}(),
@@ -753,16 +717,13 @@ RefGenome() = RefGenome(
     Vector{Region}(),
     Vector{Annotation}(),
 )
-
 abstract type RangeAnchor end
 struct TSS <: RangeAnchor end
 struct REGION <: RangeAnchor end
 struct TES <: RangeAnchor end
-
 abstract type OffSetType end
 struct INTEGER <: OffSetType end
 struct PERCENTAGE <: OffSetType end
-
 struct GeneRange
     range_start::RangeAnchor
     range_stop::RangeAnchor
@@ -770,7 +731,6 @@ struct GeneRange
     stop_offset::Int
     start_offset_type::OffSetType
     stop_offset_type::OffSetType
-
     function GeneRange(
             start::RangeAnchor,
             stop::RangeAnchor,
@@ -782,49 +742,35 @@ struct GeneRange
         if isa(start_offset_type, PERCENTAGE) && !isa(start, TSS)
             error()
         end
-
         if isa(stop_offset_type, PERCENTAGE) && !isa(stop, TSS)
             error()
         end
-
         return new(start, stop, start_offset, stop_offset, start_offset_type, stop_offset_type)
     end
 end
-
 GeneRange(start::RangeAnchor, stop::RangeAnchor) =
     GeneRange(start, stop, 0, 0, INTEGER(), INTEGER())
-
 GeneRange(start::RangeAnchor, stop::RangeAnchor, start_offset::Int, stop_offset::Int) =
     GeneRange(start, stop, start_offset, stop_offset, INTEGER(), INTEGER())
-
 const Junk = Feature
 const mRNA = RNA
-
 #= HELPER METHODS =#
-
 """
     to_vector(gene_range::GeneRange)
-
 Return the offset range encoded by `gene_range` as a `UnitRange{Int}`.
-
 This helper expects identical start and stop anchors; otherwise it throws
 an error to match the original behaviour of this utility.
 """
 function to_vector(gene_range::GeneRange)
     start_anchor = gene_range.range_start
     end_anchor = gene_range.range_stop
-
     if start_anchor != end_anchor
-
         error("Must supply a specific gene if start and end anchors for the GeneRange are different.")
     end
-
     return gene_range.start_offset:gene_range.stop_offset
 end
-
 """
     sortgenes!(ref_genome::RefGenome)
-
 Sort the genes stored on each scaffold within `ref_genome` by
 `gene_start`, pushing entries with missing coordinates to the end.
 If no scaffold information is available, a warning is emitted and the
@@ -832,15 +778,11 @@ genome is left unchanged. The function mutates `ref_genome` in place and
 returns nothing.
 """
 function sortgenes!(ref_genome::RefGenome)
-
     return if isempty(ref_genome.scaffolds)
-
         @warn "No scaffold/chromosome information.\nTreating all genes as existing on a single chromosome"
         # TODO: implement
     else
-
         for scaffold in values(ref_genome.scaffolds)
-
             genes = scaffold.genes
             if genes === missing
                 continue
@@ -852,98 +794,69 @@ function sortgenes!(ref_genome::RefGenome)
         end
     end
 end
-
 """
     Base.get(genome::RefGenome, gene_id::AbstractString)
-
 Look up the gene matching `gene_id` within `genome`. Returns the matching
 `Gene` instance or `missing` if the identifier is not present.
 """
 function Base.get(genome::RefGenome, gene_id::S) where {S <: AbstractString}
-
     gene_ind = findfirst(genome.genes[1] .== gene_id)
-
     if isnothing(gene_ind)
-
         return missing
     else
-
         return genome.genes[2][gene_ind]
     end
 end
-
 """
     Base.get(genome::RefGenome, gene_ids::Vector{<:AbstractString})
-
 Return a vector of genes corresponding to each identifier in `gene_ids`,
 preserving order. Missing identifiers yield `missing` in the result.
 """
 function Base.get(genome::RefGenome, gene_ids::Vector{S}) where {S <: AbstractString}
-
     return_list = Vector{Union{Gene, Missing}}(undef, length(gene_ids))
-
     for (i, id) in enumerate(gene_ids)
-
         return_list[i] = get(genome, id)
     end
-
     return return_list
 end
-
 # Gene
-
 """
     hasoverlap(first_start::Int, second_start::Int, first_end::Int, second_end::Int)
     hasoverlap(geneA::Gene, geneB::Gene)
-
 Return `true` if the supplied intervals overlap, `false` otherwise.
 Gene overloads use `gene_start` and `gene_end` for the comparison.
 """
 function hasoverlap(first_start::Int, second_start::Int, first_end::Int, second_end::Int)
-
     if (first_end <= second_start) || (second_end <= first_start)
-
         return false
     end
-
     return true
 end
-
 function hasoverlap(geneA::Gene, geneB::Gene)
-
     return hasoverlap(geneA.gene_start, geneB.gene_start, geneA.gene_end, geneB.gene_end)
 end
-
 """
     overlaplength(first_start::Int, second_start::Int, first_end::Int, second_end::Int)
     overlaplength(geneA::Gene, geneB::Gene)
-
 Compute the length of the intersection between two intervals, returning
 `0` when they do not overlap. Gene overloads rely on `gene_start` and
 `gene_end` fields for the calculation.
 """
 function overlaplength(first_start::Int, second_start::Int, first_end::Int, second_end::Int)
-
     if !hasoverlap(first_start, second_start, first_end, second_end)
-
         return 0
     end
-
     return max((min(first_end, second_end) - max(first_start, second_start)) + 1, 0)
 end
-
 function overlaplength(geneA::Gene, geneB::Gene)
-
     return overlaplength(geneA.gene_start, geneB.gene_start, geneA.gene_end, geneB.gene_end)
 end
-
 Base.show(io::IO, x::Feature) = begin
     type = typeof(x)
     fields = fieldnames(type)
     fields_missing = [ismissing(getfield(x, i)) for i in fields]
     fields_present = fields[.!fields_missing]
     fields_missing = fields[fields_missing]
-
     if any(:id .== fields_present)
         id = getfield(x, :id)
         print(io, "$type: '$id', with fields: ")
@@ -956,19 +869,16 @@ Base.show(io::IO, x::Feature) = begin
             print(io, "'$field' ")
         end
     end
-
     print(io, "\n     missing fields: ")
     for field in fields_missing
         print(io, "'$field' ")
     end
 end
-
 Base.show(io::IO, x::Vector{Feature}) = begin
     type = typeof(x)
     len = length(x)
     println(io, "$type with $len items")
 end
-
 export Feature,
     RegElement,
     Scaffold,
@@ -994,5 +904,4 @@ export Feature,
     INTEGER,
     PERCENTAGE,
     GeneRange
-
 end # module
