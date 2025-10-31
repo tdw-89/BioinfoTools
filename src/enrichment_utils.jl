@@ -382,7 +382,8 @@ function plot_enrich_region(
     z_min::Int=0, z_max::Int=4,
     return_figs::Bool=false,
     save_plots::Bool=false,
-    ind_var_col=3) where T <: Union{Tuple, Vector{Int}}
+    target_var_col=3) where T <: Union{Tuple, Vector{Int}}
+
     fig_vec = [GenericTrace[], Layout[]]
     for (i, sample_inds) in enumerate(sample_groups) 
         n_quantiles = 10
@@ -390,16 +391,14 @@ function plot_enrich_region(
         gene_ds_quantile_labels = String[]
         gene_ds_quantiles = Int[]
         quantile_legend = String[]
-        while isempty(gene_ds_quantile_labels) && n_quantiles > 1
-            try
-                gene_ds_quantile_labels = cut(paralog_df[!,ind_var_col], n_quantiles)
+        while n_quantiles > 1
+            gene_ds_quantile_labels = cut(paralog_df[!,target_var_col], n_quantiles)
+            if unique(gene_ds_quantile_labels) |> length == n_quantiles
                 gene_ds_quantiles = levelcode.(gene_ds_quantile_labels)
                 quantile_legend = sortNparsequantrange(unique(gene_ds_quantile_labels))
-            catch ArgumentError
+                break
+            else
                 n_quantiles -= 1
-                gene_ds_quantile_labels = String[]
-                gene_ds_quantiles = Int[]
-                quantile_legend = String[]
             end
         end
         if isempty(gene_ds_quantile_labels)
