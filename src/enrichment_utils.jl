@@ -406,7 +406,7 @@ function plot_enrich_region(
             continue
         end
         n_quantiles = length(unique(gene_ds_quantiles))
-        x_range = to_vector(group_regions[i])
+        x_range = GenomeTypes.to_vector(group_regions[i])
         positional_count_mat = zeros(length(x_range), n_quantiles)
         for d in 1:n_quantiles
             # Find the indices of all the gene pairs in the paralog df whose ds is in quantile 'd'.
@@ -652,7 +652,7 @@ function plot_enrich_expr_region(expr_df::DataFrame, gene_list::Vector{Gene}, sa
         end
         expr_df_quantiles = @pipe copy(expr_df) |> insertcols!(_, :quantile => gene_expr_quantiles)
         n_quantiles = length(unique(gene_expr_quantiles))
-        x_range = to_vector(group_regions[i])
+        x_range = GenomeTypes.to_vector(group_regions[i])
         positional_count_mat = zeros(length(x_range), n_quantiles)
         for d in 1:n_quantiles
             gene_inds = findall(expr_df_quantiles.quantile .== d)
@@ -1327,8 +1327,8 @@ function get_cor(paralog_df::DataFrame,
     XS = []
     YS = []
     for sample_ind in sample_inds
-        genes = get(genome, collect(paralog_df.GeneID))
-        paralogs = get(genome, collect(paralog_df.ParalogID))
+        genes = GenomeTypes.get(genome, collect(paralog_df.GeneID))
+        paralogs = GenomeTypes.get(genome, collect(paralog_df.ParalogID))
         enrich_vals_gene = [!siginrange(gene, gene_range) ? missing : mean(getsiginrange(gene, gene_range, sample_ind)) for gene in genes]
         enrich_vals_paralog = [!siginrange(paralog, gene_range) ? missing : mean(getsiginrange(paralog, gene_range, sample_ind)) for paralog in paralogs]
         enrich_means = [(!ismissing(pair[1]) && !ismissing(pair[2])) ? mean(pair) / global_mean : missing for pair in zip(enrich_vals_gene, enrich_vals_paralog)]
@@ -1358,7 +1358,7 @@ function get_cor_expr(expr_df::DataFrame,
     XS = []
     YS = []
     for sample_ind in sample_inds
-        genes = get(genome, collect(expr_df.GeneID))
+        genes = GenomeTypes.get(genome, collect(expr_df.GeneID))
         xs = [getsiginrange(gene, gene_range, sample_ind) for gene in genes]
         ys = [expr_df.Avg[i] for (i, gene_sig) in enumerate(xs) if !ismissing(gene_sig)]
         push!(XS, mean.(collect(skipmissing(xs))))
