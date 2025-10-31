@@ -136,6 +136,20 @@ function getchromlengths(gff_file::String)
     close(reader)
     return DataFrame(:chrom=>chroms, :length=>lengths)
 end
+
+"""
+    create_chromlengths_file(gff_file, output_file)
+Create a chromosome lengths file from a GFF file.
+# Arguments
+- `gff_file::String`: Path to the input GFF file
+- `output_file::String`: Path to the output chromosome lengths file
+# Returns
+- `Nothing`
+"""
+function create_chromlengths_file(gff_file::String, output_file::String)
+    chrom_lengths = getchromlengths(gff_file)
+    CSV.write(output_file, chrom_lengths, writeheader=false)
+end
 """
     loadgenome(gff_files, chrom_lengths_file=nothing; feature_type="gene", alt_id_field=nothing)
 Load one or more GFF files into a `RefGenome` object.

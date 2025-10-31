@@ -21,11 +21,13 @@ include("genomic_data.jl")
 include("enrichment_utils.jl")
 include("load_gff.jl")
 include("paralog_utils.jl")
+include("alignment_utils.jl")
 using .GenomeTypes
 using .GenomicData
 using .EnrichmentUtils
 using .LoadGFF
 using .ParalogUtils
+using .AlignmentUtils
 @doc raw"""
     GenomeTypes
 
