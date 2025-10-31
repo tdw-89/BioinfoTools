@@ -395,7 +395,7 @@ function plot_enrich_region(
             gene_ds_quantile_labels = cut(paralog_df[!,target_var_col], n_quantiles)
             if unique(gene_ds_quantile_labels) |> length == n_quantiles
                 gene_ds_quantiles = levelcode.(gene_ds_quantile_labels)
-                quantile_legend = sortNparsequantrange(unique(gene_ds_quantile_labels))
+                quantile_legend = sortNparsequantrange(string.(unique(gene_ds_quantile_labels)))
                 break
             else
                 n_quantiles -= 1
