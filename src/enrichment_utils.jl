@@ -17,10 +17,10 @@ using DataFrames
 using Combinatorics
 using ..GenomeTypes
 using ..GenomicData
-const FLOAT_RE = r"[0-9]+\.[0-9]+"
+const FLOAT_RE = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
 const LBOUND_RE = r"[\[(]{1}"
 const UBOUND_RE = r"[\])]{1}"
-const QUANT_RANGE_RE = r"^.*(?<lbound>[\[(]{1})\s*(?<lval>[\-0-9]+\.[0-9]+)\s*,\s*(?<uval>[\-0-9]+\.[0-9]+)\s*(?<ubound>[\])]{1})$"
+const QUANT_RANGE_RE = r"^.*(?<lbound>[\[(]{1})\s*(?<lval>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*,\s*(?<uval>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*(?<ubound>[\])]{1})$"
 const RANGE_PRECISION = 2  # Precision for rounding quantile range values
 """
     parse_quantile(q::String; digs::Int=RANGE_PRECISION)
@@ -372,12 +372,17 @@ plots can be saved or returned (`return_figs=true`). Optional keywords
 control fold-change normalisation, global means, z-score limits, and the
 column used as the independent variable.
 """
-function plot_enrich_region(paralog_df::DataFrame, gene_list::Vector{Gene}, sample_groups::Vector{T}, group_regions::Vector{GeneRange}; fold_change_over_mean::Bool=false, 
-                                                                        global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
-                                                                        z_min::Int=0, z_max::Int=4,
-                                                                        return_figs::Bool=false,
-                                                                        save_plots::Bool=false,
-                                                                        ind_var_col=3) where T <: Union{Tuple, Vector{Int}}
+function plot_enrich_region(
+    paralog_df::DataFrame, 
+    gene_list::Vector{Gene}, 
+    sample_groups::Vector{T}, 
+    group_regions::Vector{GeneRange}; 
+    fold_change_over_mean::Bool=false, 
+    global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
+    z_min::Int=0, z_max::Int=4,
+    return_figs::Bool=false,
+    save_plots::Bool=false,
+    ind_var_col=3) where T <: Union{Tuple, Vector{Int}}
     fig_vec = [GenericTrace[], Layout[]]
     for (i, sample_inds) in enumerate(sample_groups) 
         n_quantiles = 10
