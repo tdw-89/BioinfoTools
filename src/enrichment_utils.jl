@@ -174,7 +174,7 @@ end
     getsiginrange(gene::Gene, sig_range::GeneRange, sample_ind=1; peak_data::Bool=true, clamped::Bool=true, pad_clamped::Bool=true)
 Retrieve the signal values for `gene` within `sig_range`, returning the
 slice oriented 5'→3' regardless of strand. When `clamped` is `true`, out-
-of-bounds indices are clipped (or padded with `-1` values when
+of-bounds indices are clipped (or padded with zeros when
 `pad_clamped` is also `true`). Only peak (binned) signals are supported;
 missing data yield an error, while unrecoverable bounds issues return
 `missing`.
@@ -208,7 +208,6 @@ function getsiginrange(gene::Gene, sig_range::GeneRange, sample_ind=1; peak_data
         if pad_clamped
             start_clamped = clamp(range_start, 1, length(signal) + 1)
             stop_clamped = clamp(range_stop, 0, length(signal))
-            # println("$tss $tes $range_start $range_stop $start_clamped $stop_clamped")
             pad_left = abs(start_clamped - range_start)
             pad_right = abs(stop_clamped - range_stop)
             range_start = start_clamped
@@ -220,7 +219,10 @@ function getsiginrange(gene::Gene, sig_range::GeneRange, sample_ind=1; peak_data
     end
     try
         return vcat(
-            ones(pad_left) * -1, signal[range_start:range_stop], ones(pad_right) * -1)
+            zeros(pad_left),
+            signal[range_start:range_stop], 
+            zeros(pad_right)
+            )
     catch err
         if isa(err, BoundsError)
             return missing
