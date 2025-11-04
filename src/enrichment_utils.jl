@@ -17,11 +17,13 @@ using DataFrames
 using Combinatorics
 using ..GenomeTypes
 using ..GenomicData
+
 const FLOAT_RE = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
 const LBOUND_RE = r"[\[(]{1}"
 const UBOUND_RE = r"[\])]{1}"
 const QUANT_RANGE_RE = r"^.*(?<lbound>[\[(]{1})\s*(?<lval>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*,\s*(?<uval>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*(?<ubound>[\])]{1})$"
 const RANGE_PRECISION = 2  # Precision for rounding quantile range values
+
 """
     parse_quantile(q::String; digs::Int=RANGE_PRECISION)
 Normalize a quantile-range label by rounding the numeric bounds to
@@ -501,12 +503,17 @@ entry, summarising signal over 100 evenly spaced bins. Keyword
 arguments mirror [`plot_enrich_region`](@ref), enabling fold-change
 normalisation, z-score scaling, and optional plot persistence.
 """
-function plot_enrich_percent(paralog_df::DataFrame, gene_list::Vector{Gene}, sample_groups::Vector{T}; fold_change_over_mean::Bool=false, 
-                                                                        global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
-                                                                        z_min::Int=0, z_max::Int=4,
-                                                                        return_figs::Bool=false,
-                                                                        save_plots::Bool=false,
-                                                                        ind_var_col=3) where T <: Union{Tuple, Vector{Int}}
+function plot_enrich_percent(
+    paralog_df::DataFrame, 
+    gene_list::Vector{Gene}, 
+    sample_groups::Vector{T}; 
+    fold_change_over_mean::Bool=false, 
+    global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
+    z_min::Int=0, z_max::Int=4,
+    return_figs::Bool=false,
+    save_plots::Bool=false,
+    target_var_col::Int=3
+    ) where T <: Union{Tuple, Vector{Int}}
     fig_vec = [GenericTrace[], Layout[]]
     for (i, sample_inds) in enumerate(sample_groups) 
         n_quantiles = 10
@@ -514,16 +521,14 @@ function plot_enrich_percent(paralog_df::DataFrame, gene_list::Vector{Gene}, sam
         gene_ds_quantile_labels = String[]
         gene_ds_quantiles = Int[]
         quantile_legend = String[]
-        while isempty(gene_ds_quantile_labels) && n_quantiles > 1
-            try
-                gene_ds_quantile_labels = cut(paralog_df[!,ind_var_col], n_quantiles)
+        while n_quantiles > 1
+            gene_ds_quantile_labels = cut(paralog_df[!,target_var_col], n_quantiles)
+            if unique(gene_ds_quantile_labels) |> length == n_quantiles
                 gene_ds_quantiles = levelcode.(gene_ds_quantile_labels)
-                quantile_legend = sortNparsequantrange(unique(gene_ds_quantile_labels))
-            catch ArgumentError
+                quantile_legend = sortNparsequantrange(string.(unique(gene_ds_quantile_labels)))
+                break
+            else
                 n_quantiles -= 1
-                gene_ds_quantile_labels = String[]
-                gene_ds_quantiles = Int[]
-                quantile_legend = String[]
             end
         end
         if isempty(gene_ds_quantile_labels)
@@ -534,13 +539,8 @@ function plot_enrich_percent(paralog_df::DataFrame, gene_list::Vector{Gene}, sam
         x_range = 1:100
         positional_count_mat = zeros(length(x_range), n_quantiles)
         for d in 1:n_quantiles
-            # Find the indices of all the gene pairs in the paralog df whose ds is in quantile 'd'.
-            # Stop after identifying ⌊n pairs / 2⌋ pairs and their associated indices in the 
-            # 'gene_list'. 
             gene_pair_inds = findall(gene_ds_quantiles .== d)
-            # shuffle!(gene_pair_inds)
             qual_gene_ind_pairs = Vector{Tuple{Int, Int}}()
-            # max_pairs = length(gene_pair_inds)
             for ind in gene_pair_inds
                 gene_1 = paralog_df[ind, 1]
                 gene_2 = paralog_df[ind, 2]
@@ -549,9 +549,6 @@ function plot_enrich_percent(paralog_df::DataFrame, gene_list::Vector{Gene}, sam
                 if !(isnothing(qual_gene_1_ind)) && !(isnothing(qual_gene_2_ind))
                     push!(qual_gene_ind_pairs, (qual_gene_1_ind, qual_gene_2_ind))
                 end
-                # if length(qual_gene_ind_pairs) >= max_pairs
-                #     break
-                # end
             end
             for g in eachindex(qual_gene_ind_pairs)
                 temp_gene = gene_list[qual_gene_ind_pairs[g][1]]
@@ -585,17 +582,29 @@ function plot_enrich_percent(paralog_df::DataFrame, gene_list::Vector{Gene}, sam
             height=750,
         )
         if save_plots
-            savefig(plot(heatmap(x=x_range, y=quantile_legend, z=positional_count_mat', zmin=z_min, zmax=z_max), layout_1), joinpath(plot_save_dir, "$(sample_name)_positional_enrichment_vs_ds_quantile_$(n_quantiles)_quantiles_heatmap.html"))
+            savefig(
+                plot(
+                    heatmap(
+                        x=x_range, 
+                        y=quantile_legend, 
+                        z=positional_count_mat', 
+                        zmin=z_min, 
+                        zmax=z_max
+                    ), 
+                layout_1
+                ), 
+                joinpath(
+            plot_save_dir, 
+            "$(sample_name)_positional_enrichment_vs_ds_quantile_$(n_quantiles)_quantiles_heatmap.html"))
         end
         if return_figs
-            push!(fig_vec[1], 
+            push!(fig_vec[1],
                 heatmap(
                     x=x_range,
                     y=quantile_legend,
                     z=positional_count_mat',
                     zmin=z_min,
                     zmax=z_max,
-                    # colorscale=[[0, "rgb(255,255,255)"], [1, "rgb(255,0,0)"]]),
                 ))
             push!(fig_vec[2], layout_1)
         else
@@ -607,7 +616,6 @@ function plot_enrich_percent(paralog_df::DataFrame, gene_list::Vector{Gene}, sam
                         z=positional_count_mat',
                         zmin=z_min,
                         zmax=z_max,
-                        # colorscale=[[0, "rgb(255,255,255)"], [1, "rgb(255,0,0)"]]),
                     ), layout_1
                 )
             )

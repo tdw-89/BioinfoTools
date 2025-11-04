@@ -8,12 +8,12 @@ ones you need individually.
 
 - `GenomeTypes` - core data structures for scaffolds, contigs, genes, regions, and
   associated signal tracks.
-- `GenomicData` – parsers and utilities for working with BAM/BED signals, replicate
+- `GenomicData` - parsers and utilities for working with BAM/BED signals, replicate
   aggregation, and experiment management.
-- `EnrichmentUtils` – helpers for aligning signal windows to genomic features and computing
+- `EnrichmentUtils` - helpers for aligning signal windows to genomic features and computing
   enrichment statistics.
-- `LoadGFF` – functions for loading GFF/GFF3 annotations into the in-memory genome types.
-- `ParalogUtils` – reciprocal-best-hit and gene family utilities powered by Graphs.jl.
+- `LoadGFF` - functions for loading GFF/GFF3 annotations into the in-memory genome types.
+- `ParalogUtils` - reciprocal-best-hit and gene family utilities powered by Graphs.jl.
 """
 module BioinfoTools
 include("genome_types.jl")
