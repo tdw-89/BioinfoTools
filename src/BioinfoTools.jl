@@ -6,7 +6,7 @@ ones you need individually.
 
 # Submodules
 
-- `GenomeTypes` – core data structures for scaffolds, contigs, genes, regions, and
+- `GenomeTypes` - core data structures for scaffolds, contigs, genes, regions, and
   associated signal tracks.
 - `GenomicData` – parsers and utilities for working with BAM/BED signals, replicate
   aggregation, and experiment management.
