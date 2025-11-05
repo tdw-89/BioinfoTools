@@ -281,9 +281,14 @@ interpolation. The resulting vector represents the signal in percentage
 space (0–100%) along the original interval.
 """
 function to_percent(signal_vec::Vector{R}) where R <: Union{Real}
-    signal_interp = interpolate((1:length(signal_vec),), signal_vec, Gridded(Linear()))
-    new_inds = range(1, length(signal_vec), 100)
-    return signal_interp[new_inds]
+    n = length(signal_vec)
+    if n <= 1
+        fill_val = n == 0 ? 0.0 : Float64(signal_vec[1])
+        return fill(fill_val, 100)
+    end
+    signal_interp = interpolate((1:n,), Float64.(signal_vec), Gridded(Linear()))
+    new_inds = range(1, stop=n, length=100)
+    return collect(signal_interp.(new_inds))
 end
 """
     findcombinations(qualified_genes::Vector{Gene}, sample_inds::Vector{Tuple}, peak_type_names::Vector{String}, peak_range; print_only::Bool=false)
