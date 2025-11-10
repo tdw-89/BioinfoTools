@@ -2,14 +2,22 @@ if !@isdefined Feature
     include("genome_types.jl")
 end
 """
-    This function assumes that the 'paralog' DataFrame has (at least) the following columns in the
-    following order, with the following types:
-        * 1: GeneID <: AbstractString
-        * 2: ParalogID <: AbstractString
-    This function also assumes that the 'expression' DataFrame has (at least) the following columns in the
-    following order, with the following types:
-        * 1: GeneID <: AbstractString
-        * 2: Expression value <: AbstractFloat
+    add_expression_to_paralogs(paralog_df, expression_df)
+
+Add expression values to a paralog DataFrame by matching gene IDs.
+
+# Arguments
+- `paralog_df::DataFrame`: DataFrame with at least 2 columns in the following order:
+  1. GeneID (String or AbstractString)
+  2. ParalogID (String or AbstractString)
+- `expression_df::DataFrame`: DataFrame with at least 2 columns in the following order:
+  1. GeneID (String or AbstractString)
+  2. Expression value (Float or AbstractFloat)
+
+# Returns
+- `DataFrame`: The original paralog DataFrame with two additional columns appended:
+  - `GeneExpr`: Expression value for the gene (missing if not found)
+  - `ParalogExpr`: Expression value for the paralog (missing if not found)
 """
 function add_expression_to_paralogs(paralog_df::DataFrame, expression_df::DataFrame)
     gene_expr_vals = Vector{Union{Float64, Missing}}(undef, size(paralog_df)[1])

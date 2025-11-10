@@ -1,5 +1,22 @@
 module AlignmentUtils
 
+"""
+    pair_aln_perc(seq1, seq2, gap_char='-')
+
+Calculate pairwise alignment percent identity between two aligned sequences.
+
+# Arguments
+- `seq1::AbstractString`: First aligned sequence
+- `seq2::AbstractString`: Second aligned sequence (must be same length as `seq1`)
+- `gap_char::Char`: Character representing gaps in the alignment
+
+# Returns
+- `Tuple{Int, Float64, Int, Float64}`: A tuple containing:
+  1. Length of seq1 (excluding gaps)
+  2. Percent identity from seq1 to seq2
+  3. Length of seq2 (excluding gaps)
+  4. Percent identity from seq2 to seq1
+"""
 function pair_aln_perc(seq1::AbstractString, seq2::AbstractString, gap_char::Char='-')
     if length(seq1) != length(seq2)
         error("Sequences must be of equal length for pairwise alignment percentage calculation.")
@@ -19,6 +36,17 @@ function pair_aln_perc(seq1::AbstractString, seq2::AbstractString, gap_char::Cha
         )
 end
 
+"""
+    read_fasta_aln(file_path)
+
+Read a FASTA alignment file and return sequences as a dictionary.
+
+# Arguments
+- `file_path::AbstractString`: Path to the FASTA alignment file
+
+# Returns
+- `Dict{String, String}`: Dictionary mapping sequence headers to sequences
+"""
 function read_fasta_aln(file_path::AbstractString)
     open(file_path, "r") do io
         records = read(io, String)
@@ -33,4 +61,7 @@ function read_fasta_aln(file_path::AbstractString)
         return seq_dict
     end
 end
+
+export pair_aln_perc, read_fasta_aln
+
 end # module AlignmentUtils

@@ -85,15 +85,16 @@ end
 Identify reciprocal best hits (RBH) between paralogs based on similarity scores.
 
 # Arguments
-- `paralog_df::DataFrame`: DataFrame with columns:
+- `paralog_df::DataFrame`: DataFrame with at least 4 columns:
   1. GeneID (String)
   2. ParalogID (String)
-  3. Percent identity from gene to paralog (Float)
-  4. Percent identity from paralog to gene (Float)
+  3. Percent identity from gene to paralog (Float), or dS value if using `scoring="ds"`
+  4. Percent identity from paralog to gene (Float), or ignored if using `scoring="ds"`
 - `scoring::String="max"`: Scoring method for determining best hits
   - `"max"` or `"maximum"`: Use maximum of bidirectional scores
   - `"mean"`, `"avg"`, or `"average"`: Use mean of bidirectional scores
   - `"double_max"`: Use original bidirectional scores
+  - `"ds"`: Use dS values (column 3 should contain dS values)
 
 # Returns
 - `DataFrame`: Contains reciprocal best hit pairs with columns:
@@ -210,17 +211,17 @@ This function creates a graph from paralog pairs and identifies connected compon
 as gene families. Optionally applies cutoffs and creates weighted graphs.
 
 # Arguments
-- `paralog_df::DataFrame`: DataFrame with columns:
+- `paralog_df::DataFrame`: DataFrame with at least 3 columns:
   1. GeneID (String)
   2. ParalogID (String)
-  3. Edge value (Float) - e.g., dS, dN, average % identity
-  4. (Optional) Expression value for GeneID (Float)
-  5. (Optional) Expression value for ParalogID (Float)
+  3. Edge value (Float) - e.g., dS, dN, average % identity - used for weighting if `weighted_graph=true`
+  4. (Optional) Expression value for GeneID (Float) - used if expression data is available
+  5. (Optional) Expression value for ParalogID (Float) - used if expression data is available
 - `apply_cutoff::Bool=false`: Whether to apply filtering cutoff
-- `cutoff_val::Union{Float64, Nothing}=nothing`: Cutoff threshold value
-- `cutoff_variable::Union{String, Symbol, Nothing}=nothing`: Column name for cutoff comparison
-- `cutoff_comparison::Function`: Comparison function (e.g., `<`, `>`, `<=`)
-- `weighted_graph::Bool=false`: Create weighted graph instead of unweighted
+- `cutoff_val::Union{Float64, Nothing}=nothing`: Cutoff threshold value (required if `apply_cutoff=true`)
+- `cutoff_variable::Union{String, Symbol, Nothing}=nothing`: Column name for cutoff comparison (required if `apply_cutoff=true`)
+- `cutoff_comparison::Function`: Comparison function (e.g., `<`, `>`, `<=`) (required if `apply_cutoff=true`)
+- `weighted_graph::Bool=false`: Create weighted MetaGraph instead of unweighted SimpleGraph
 - `add_names::Bool=false`: Add gene names as vertex properties
 
 # Returns
@@ -426,16 +427,16 @@ This function constructs a MetaGraph where edges are weighted by a specified var
 as vertex properties.
 
 # Arguments
-- `paralog_df::DataFrame`: DataFrame with columns:
+- `paralog_df::DataFrame`: DataFrame with at least 3 columns:
   1. GeneID (String)
   2. ParalogID (String)
-  3. Weight variable (Float) - specified by `weight_variable`
-  4. (Optional) Expression value for GeneID (Float)
-  5. (Optional) Expression value for ParalogID (Float)
-- `weight_variable::Union{String, Symbol}`: Column name to use for edge weights
+  3. Weight variable (Float) - the column specified by `weight_variable`
+  4. (Optional) Expression value for GeneID (Float) - required if `add_expr=true` and columns 4-5 contain expression data
+  5. (Optional) Expression value for ParalogID (Float) - required if `add_expr=true` and columns 4-5 contain expression data
+- `weight_variable::Union{String, Symbol}`: Column name in `paralog_df` to use for edge weights
 - `cutoff_val::Float64=Inf`: Default weight value for graph initialization
 - `add_names::Bool=false`: Add gene names as `:name` vertex property
-- `add_expr::Bool=false`: Add expression values as `:expr` vertex property
+- `add_expr::Bool=false`: Add expression values as `:expr` vertex property (requires columns 4-5 to contain expression data)
 
 # Returns
 - `MetaGraph`: Weighted graph with:

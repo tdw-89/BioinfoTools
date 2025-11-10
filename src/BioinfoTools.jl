@@ -16,18 +16,21 @@ ones you need individually.
 - `ParalogUtils` - reciprocal-best-hit and gene family utilities powered by Graphs.jl.
 """
 module BioinfoTools
+
 include("genome_types.jl")
 include("genomic_data.jl")
 include("enrichment_utils.jl")
 include("load_gff.jl")
 include("paralog_utils.jl")
 include("alignment_utils.jl")
+
 using .GenomeTypes
 using .GenomicData
 using .EnrichmentUtils
 using .LoadGFF
 using .ParalogUtils
 using .AlignmentUtils
+
 @doc raw"""
     GenomeTypes
 
@@ -59,5 +62,9 @@ objects populated with genes, transcripts, and optional repeats.
 Utilities for discovering reciprocal best hits, building paralog graphs, and exporting
 gene family relationships for further network analysis.
 """ ParalogUtils
-export GenomeTypes, GenomicData, EnrichmentUtils, LoadGFF, ParalogUtils
+export GenomeTypes, 
+        GenomicData, 
+        EnrichmentUtils, 
+        LoadGFF, 
+        ParalogUtils
 end

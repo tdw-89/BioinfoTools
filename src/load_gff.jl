@@ -15,12 +15,16 @@ const default_downstream = 2000
 """
     averagereplicates!(expr_data)
 Average expression data across paired replicates in a DataFrame.
-Note: This function assumes that there are two replicates for each sample, that each pair 
-are in adjacent columns, and that the first two columns are gene ID and length respectively.
+
 # Arguments
-- `expr_data::DataFrame`: Expression data with replicates in adjacent columns
+- `expr_data::DataFrame`: Expression data with replicates in adjacent columns. Must have at least 3 columns. The first two columns are assumed to be gene ID and length, and columns 3 onwards contain replicate expression values in adjacent pairs.
+
 # Returns
 - `Nothing` (modifies `expr_data` in place)
+
+# Notes
+This function assumes that there are two replicates for each sample, that each pair 
+are in adjacent columns starting from column 3, and that the first two columns are gene ID and length respectively.
 """
 function averagereplicates!(expr_data::DataFrame)
     new_names = String[]
@@ -38,8 +42,10 @@ end
 """
     parseattributes(attrs)
 Parse GFF3 attribute vector into attribute names and a dictionary.
+
 # Arguments
-- `attrs::Vector{Pair{String, Vector{String}}}`: Vector of attribute key-value pairs from GFF3
+- `attrs::Vector{Pair{String, Vector{String}}}`: Vector of attribute key-value pairs from a GFF3 record
+
 # Returns
 - `Dict{String, Vector{String}}`: A dictionary mapping attribute names to their values
 """
@@ -258,12 +264,14 @@ end
 """
     parsegene!(record, refs, chrom_lengths, using_chrom_file; alt_id_field=nothing)
 Parse a gene record from a GFF file and add it to the reference genome.
+
 # Arguments
 - `record::GFF3.Record`: GFF3 record to parse
 - `refs::RefGenome`: Reference genome to add the gene to
-- `chrom_lengths::DataFrame`: DataFrame containing chromosome lengths
+- `chrom_lengths::DataFrame`: DataFrame containing chromosome lengths (must have chromosome names in column 1 and lengths in column 2)
 - `using_chrom_file::Bool`: Whether a chromosome lengths file was used
-- `alt_id_field::Union{String, Nothing}=nothing`: Alternative ID field name
+- `alt_id_field::Union{String, Nothing}=nothing`: Alternative ID field name (if `nothing`, uses "ID")
+
 # Returns
 - `Nothing`
 """

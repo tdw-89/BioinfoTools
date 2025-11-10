@@ -299,6 +299,13 @@ can be evaluated over a named gene region or a supplied range object.
 When `print_only` is `true`, summaries are printed instead of returned.
 Non-informative genes (genes lacking peaks in all samples) are filtered
 out by design.
+
+# Arguments
+- `qualified_genes::Vector{Gene}`: Genes to analyze for peak combinations
+- `sample_inds::Vector{Tuple}`: Vector of tuples, where each tuple contains sample indices for a peak type
+- `peak_type_names::Vector{String}`: Labels for each peak type (must match length of `sample_inds`)
+- `peak_range::Union{AbstractRange, String}`: Region to evaluate (either a range or one of "downstream", "upstream", "promoter", "gene_body", "first_exon")
+- `print_only::Bool`: If `true`, print summaries instead of returning DataFrame
 """
 function findcombinations(qualified_genes::Vector{Gene}, sample_inds::Vector{T}, peak_type_names::Vector{String}, peak_range::Union{R, String}; print_only::Bool=false) where {T <: Tuple{Vararg{Int}}, R <: AbstractRange} 
     n_peak_types = length(sample_inds)
@@ -380,6 +387,20 @@ specified `GeneRange`s. Quantile bins are derived from `paralog_df`, and
 plots can be saved or returned (`return_figs=true`). Optional keywords
 control fold-change normalisation, global means, z-score limits, and the
 column used as the independent variable.
+
+# Arguments
+- `paralog_df::DataFrame`: DataFrame containing gene information with quantile or categorical data in column specified by `target_var_col`
+- `gene_list::Vector{Gene}`: Genes to plot enrichment for
+- `sample_groups::Vector`: Vector of sample index tuples or vectors for grouping
+- `group_regions::Vector{GeneRange}`: Regions to plot for each sample group
+- `fold_change_over_mean::Bool`: If `true`, normalize by global mean
+- `global_means::Union{Float64, Vector{Float64}, Nothing}`: Global mean values for normalization
+- `z_min::Int`: Minimum z-score for color scale
+- `z_max::Int`: Maximum z-score for color scale
+- `return_figs::Bool`: If `true`, return plot objects instead of displaying
+- `save_plots::Bool`: If `true`, save plots to disk
+- `target_var_col`: Column index or name in `paralog_df` containing the grouping variable
+- `plot_save_dir::String`: Directory to save plots to
 """
 function plot_enrich_region(
     paralog_df::DataFrame, 
@@ -508,6 +529,12 @@ Create percent-normalised enrichment plots for each `sample_groups`
 entry, summarising signal over 100 evenly spaced bins. Keyword
 arguments mirror [`plot_enrich_region`](@ref), enabling fold-change
 normalisation, z-score scaling, and optional plot persistence.
+
+# Arguments
+- `paralog_df::DataFrame`: DataFrame containing gene information with quantile or categorical data in column specified by `target_var_col`
+- `gene_list::Vector{Gene}`: Genes to plot enrichment for
+- `sample_groups::Vector`: Vector of sample index tuples or vectors for grouping
+- Additional keyword arguments: see [`plot_enrich_region`](@ref)
 """
 function plot_enrich_percent(
     paralog_df::DataFrame, 
@@ -638,13 +665,26 @@ Create enrichment plots derived from expression data, stratifying genes
 according to expression quantiles and evaluating signal across the
 regions provided in `group_regions`. Keyword arguments align with
 [`plot_enrich_region`](@ref).
+
+# Arguments
+- `expr_df::DataFrame`: DataFrame containing expression data with a `GeneID` column and expression values in subsequent columns
+- `gene_list::Vector{Gene}`: Genes to plot enrichment for
+- `sample_groups::Vector`: Vector of sample index tuples or vectors for grouping
+- `group_regions::Vector{GeneRange}`: Regions to plot for each sample group
+- Additional keyword arguments: see [`plot_enrich_region`](@ref)
 """
-function plot_enrich_expr_region(expr_df::DataFrame, gene_list::Vector{Gene}, sample_groups::Vector{T}, group_regions::Vector{GeneRange}; fold_change_over_mean::Bool=false, 
-                                                                        global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
-                                                                        z_min::Int=0, z_max::Int=4,
-                                                                        return_figs::Bool=false,
-                                                                        save_plots::Bool=false,
-                                                                        plot_save_dir::String=".") where T <: Union{Tuple, Vector{Int}}
+function plot_enrich_expr_region(
+    expr_df::DataFrame, 
+    gene_list::Vector{Gene}, 
+    sample_groups::Vector{T}, 
+    group_regions::Vector{GeneRange}; 
+        fold_change_over_mean::Bool=false, 
+        global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
+        z_min::Int=0, z_max::Int=4,
+        return_figs::Bool=false,
+        save_plots::Bool=false,
+        plot_save_dir::String=".") where T <: Union{Tuple, Vector{Int}}
+
     fig_vec = [GenericTrace[], Layout[]]
     for (i, sample_inds) in enumerate(sample_groups) 
         sample_name = gene_list[1].samples[sample_inds[1]]
@@ -652,16 +692,14 @@ function plot_enrich_expr_region(expr_df::DataFrame, gene_list::Vector{Gene}, sa
         gene_expr_quantile_labels = String[]
         gene_expr_quantiles = Int[]
         quantile_legend = String[]
-        while isempty(gene_expr_quantile_labels) && n_quantiles > 1
-            try
-                gene_expr_quantile_labels = cut(expr_df.Avg, n_quantiles)
+        while n_quantiles > 1
+            gene_expr_quantile_labels = cut(expr_df.Avg, n_quantiles)
+            if unique(gene_expr_quantile_labels) |> length == n_quantiles
                 gene_expr_quantiles = levelcode.(gene_expr_quantile_labels)
-                quantile_legend = sortNparsequantrange(unique(gene_expr_quantile_labels))
-            catch ArgumentError
+                quantile_legend = sortNparsequantrange(string.(unique(gene_expr_quantile_labels)))
+                break
+            else
                 n_quantiles -= 1
-                gene_expr_quantile_labels = String[]
-                gene_expr_quantiles = Int[]
-                quantile_legend = String[]
             end
         end
         if isempty(gene_expr_quantile_labels)
@@ -741,13 +779,23 @@ Percent-normalised variant of [`plot_enrich_expr_region`](@ref) that
 condenses expression signals into 100 evenly spaced bins before
 plotting. Accepts the same keyword arguments for controlling scaling
 and plot export.
+
+# Arguments
+- `expr_df::DataFrame`: DataFrame containing expression data with a `GeneID` column and expression values in subsequent columns
+- `gene_list::Vector{Gene}`: Genes to plot enrichment for
+- `sample_groups::Vector`: Vector of sample index tuples or vectors for grouping
+- Additional keyword arguments: see [`plot_enrich_region`](@ref)
 """
-function plot_enrich_expr_percent(expr_df::DataFrame, gene_list::Vector{Gene}, sample_groups::Vector{T}; fold_change_over_mean::Bool=false, 
-                                                                        global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
-                                                                        z_min::Int=0, z_max::Int=4,
-                                                                        return_figs::Bool=false,
-                                                                        save_plots::Bool=false,
-                                                                        plot_save_dir::String=".") where T <: Union{Tuple, Vector{Int}}
+function plot_enrich_expr_percent(
+    expr_df::DataFrame, 
+    gene_list::Vector{Gene}, 
+    sample_groups::Vector{T}; 
+    fold_change_over_mean::Bool=false, 
+    global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
+    z_min::Int=0, z_max::Int=4,
+    return_figs::Bool=false,
+    save_plots::Bool=false,
+    plot_save_dir::String=".") where T <: Union{Tuple, Vector{Int}}
     fig_vec = [GenericTrace[], Layout[]]
     for (i, sample_inds) in enumerate(sample_groups) 
         sample_name = gene_list[1].samples[sample_inds[1]]
@@ -755,16 +803,14 @@ function plot_enrich_expr_percent(expr_df::DataFrame, gene_list::Vector{Gene}, s
         gene_expr_quantile_labels = String[]
         gene_expr_quantiles = Int[]
         quantile_legend = String[]
-        while isempty(gene_expr_quantile_labels) && n_quantiles > 1
-            try
-                gene_expr_quantile_labels = cut(expr_df.Avg, n_quantiles)
+        while n_quantiles > 1
+            gene_expr_quantile_labels = cut(expr_df.Avg, n_quantiles)
+            if unique(gene_expr_quantile_labels) |> length == n_quantiles
                 gene_expr_quantiles = levelcode.(gene_expr_quantile_labels)
-                quantile_legend = sortNparsequantrange(unique(gene_expr_quantile_labels))
-            catch ArgumentError
+                quantile_legend = sortNparsequantrange(string.(unique(gene_expr_quantile_labels)))
+                break
+            else
                 n_quantiles -= 1
-                gene_expr_quantile_labels = String[]
-                gene_expr_quantiles = Int[]
-                quantile_legend = String[]
             end
         end
         if isempty(gene_expr_quantile_labels)
@@ -847,6 +893,15 @@ Generate summary plots for each region, aggregating average signal across
 `sample_ind_groups`. Results can be returned, saved, oriented
 horizontally, or rendered as box plots depending on keyword arguments.
 `global_means` provides the baseline for fold-change calculations.
+
+# Arguments
+- `paralog_df::DataFrame`: DataFrame containing gene information with quantile or categorical data in column specified by `target_var_col`
+- `gene_list::Vector{Gene}`: Genes to include in the plots
+- `sample_ind_groups::Vector`: Vector of sample index tuples or vectors for grouping
+- `region_list::Vector{GeneRange}`: Regions to aggregate signal over
+- `global_means::Union{Float64, Vector{Float64}}`: Mean values for fold-change normalization
+- `y_range::Tuple{Real, Real}`: Y-axis range for plots
+- Additional keyword arguments control plot style and output
 """
 function plot_bar(paralog_df::DataFrame, 
                   gene_list::Vector{Gene},
@@ -870,16 +925,14 @@ function plot_bar(paralog_df::DataFrame,
         gene_ds_quantile_labels = String[]
         gene_ds_quantiles = Int[]
         quantile_legend = String[]
-        while isempty(gene_ds_quantile_labels) && n_quantiles > 1
-            try
-                gene_ds_quantile_labels = cut(paralog_df[!,ind_var_col], n_quantiles)
+        while n_quantiles > 1
+            gene_ds_quantile_labels = cut(paralog_df[!,ind_var_col], n_quantiles)
+            if unique(gene_ds_quantile_labels) |> length == n_quantiles
                 gene_ds_quantiles = levelcode.(gene_ds_quantile_labels)
-                quantile_legend = sortNparsequantrange(unique(gene_ds_quantile_labels))
-            catch ArgumentError
+                quantile_legend = sortNparsequantrange(string.(unique(gene_ds_quantile_labels)))
+                break
+            else
                 n_quantiles -= 1
-                gene_ds_quantile_labels = String[]
-                gene_ds_quantiles = Int[]
-                quantile_legend = String[]
             end
         end
         if isempty(gene_ds_quantile_labels)
@@ -1011,6 +1064,19 @@ Expression analogue of [`plot_bar`](@ref) that aggregates expression
 signals across regions and sample groups before plotting. Figures and
 summary statistics are optionally returned depending on `return_figs`;
 plots can be oriented horizontally or generated as box plots.
+
+# Arguments
+- `expr_df::DataFrame`: DataFrame containing expression data with a `GeneID` column and an `Avg` column for average expression values
+- `gene_list::Vector{Gene}`: Genes to include in the plots
+- `sample_ind_groups::Vector`: Vector of sample index tuples or vectors for grouping
+- `region_list::Vector{GeneRange}`: Regions to aggregate signal over
+- `global_means::Vector{Float64}`: Mean values for fold-change normalization
+- `y_range::Union{Nothing, Vector{Int}}`: Y-axis range for plots
+- `return_figs::Bool`: If `true`, return plot objects instead of displaying
+- `horizontal::Bool`: If `true`, create horizontal bar plots
+- `save_plots::Bool`: If `true`, save plots to disk
+- `box_plots::Bool`: If `true`, create box plots instead of bar plots
+- `plot_save_dir::String`: Directory to save plots to
 """
 function plot_bar_expr(expr_df::DataFrame, 
                   gene_list::Vector{Gene}, 
@@ -1033,16 +1099,14 @@ function plot_bar_expr(expr_df::DataFrame,
     gene_expr_quantile_labels = String[]
     gene_expr_quantiles = Int[]
     quantile_legend = String[]
-    while isempty(gene_expr_quantile_labels) && n_quantiles > 1
-        try
-            gene_expr_quantile_labels = cut(expr_df.Avg, n_quantiles)
+    while n_quantiles > 1
+        gene_expr_quantile_labels = cut(expr_df.Avg, n_quantiles)
+        if unique(gene_expr_quantile_labels) |> length == n_quantiles
             gene_expr_quantiles = levelcode.(gene_expr_quantile_labels)
-            quantile_legend = sortNparsequantrange(unique(gene_expr_quantile_labels))
-        catch ArgumentError
+            quantile_legend = sortNparsequantrange(string.(unique(gene_expr_quantile_labels)))
+            break
+        else
             n_quantiles -= 1
-            gene_expr_quantile_labels = String[]
-            gene_expr_quantiles = Int[]
-            quantile_legend = String[]
         end
     end
     if isempty(gene_expr_quantile_labels)

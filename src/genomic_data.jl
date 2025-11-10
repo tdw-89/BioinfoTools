@@ -168,6 +168,10 @@ end
 """
     average_bam_replicate_groups(bam_data; replicate_list=nothing)
 Average BAM replicate groups according to the provided replicate specification.
+
+# Arguments
+- `bam_data::Experiment`: BAM experiment data with samples to be averaged
+- `replicate_list::Union{String, DataFrame, Nothing}`: Optional CSV file path or DataFrame where each row specifies sample names to average together. If `nothing`, each sample is treated as its own group.
 """
 function average_bam_replicate_groups(bam_data::Experiment{T, V, R}; replicate_list::Union{String, DataFrame, Nothing} = nothing) where {T <: Real, V <: AbstractVector{T}, R <: Real}
     n_chroms = length(bam_data.samples[1].chroms)
@@ -189,6 +193,10 @@ end
 """
     average_peak_replicate_groups(peak_data; replicate_list=nothing)
 Average binary peak replicate groups analogous to [`average_bam_replicate_groups`](@ref).
+
+# Arguments
+- `peak_data::Experiment{Bool, BitVector, R}`: Peak experiment data with binary occupancy signals
+- `replicate_list::Union{String, DataFrame, Nothing}`: Optional CSV file path or DataFrame where each row specifies sample names to average together. If `nothing`, each sample is treated as its own group.
 """
 function average_peak_replicate_groups(peak_data::Experiment{Bool, BitVector, R}; replicate_list::Union{String, DataFrame, Nothing} = nothing) where {R <: Real}
     if isa(replicate_list, String)
@@ -290,6 +298,10 @@ end
 """
     binpeaks(peak_files, chrom_lengths_file)
 Convert one or more narrowPeak/BED files into an `Experiment` with binary occupancy signals.
+
+# Arguments
+- `peak_files::Union{String, Vector{String}}`: Single peak file path or vector of peak file paths
+- `chrom_lengths_file::Union{String, Nothing}`: Path to a chromosome lengths file (required; must be a 2-column file with chromosome names and lengths)
 """
 function binpeaks(peak_files::Union{String, Vector{String}}, chrom_lengths_file::Union{String, Nothing} = nothing)
     if isa(peak_files, String)
@@ -329,6 +341,11 @@ end
 """
     binpeakshomer(peak_files, chrom_lengths_file; gff_files=nothing)
 Construct binary peak tracks from HOMER peak output.
+
+# Arguments
+- `peak_files::Vector{String}`: Vector of HOMER peak file paths
+- `chrom_lengths_file::Union{String, Nothing}`: Optional path to chromosome lengths file
+- `gff_files::Union{String, Nothing, Vector{String}}`: Optional GFF file(s) to extract chromosome lengths from (required if `chrom_lengths_file` is `nothing`)
 """
 function binpeakshomer(peak_files::Vector{String}, chrom_lengths_file::Union{String, Nothing} = nothing; gff_files::Union{String, Nothing, Vector{String}} = nothing)
     chrom_lengths_df = DataFrame()
@@ -366,6 +383,12 @@ end
 """
     addtogenes!(genome, experiment; peak_data=true, regions=true)
 Attach experiment signal vectors to genes stored within `genome`.
+
+# Arguments
+- `genome`: Reference genome containing genes with associated scaffold information
+- `experiment::Experiment`: Experiment data containing chromosome signals to attach
+- `peak_data::Bool`: If `true`, signals are treated as binary (BitVector); if `false`, as continuous numeric vectors
+- `regions::Bool`: If `true`, also attach signals to gene regions
 """
 function addtogenes!(genome, experiment::Experiment{T, V, R}; peak_data::Bool = true, regions::Bool = true) where {T <: Real, V <: AbstractVector{T}, R <: Real}
     if peak_data
@@ -413,7 +436,12 @@ function addtogenes!(genome, experiment::Experiment{T, V, R}; peak_data::Bool = 
 end
 """
     addexpression!(ref_genome, expr_data; total_expr=true)
-Add expression measurements from `expr_data` into `ref_genome`.
+Add expression data from `expr_data` into `ref_genome`.
+
+# Arguments
+- `ref_genome`: Reference genome containing genes to add expression data to
+- `expr_data::DataFrame`: DataFrame containing expression values. Must have a column named `GeneID` for matching genes, and additional columns with expression values.
+- `total_expr::Bool`: Currently unused parameter (preserved for compatibility)
 """
 function addexpression!(ref_genome, expr_data::DataFrame; total_expr::Bool = true)
     for row in eachrow(expr_data)
@@ -428,6 +456,12 @@ end
 """
     addtorepeats!(genome, experiment; peak_data=false, add_to_region=false)
 Attach experimental signals to repeat annotations.
+
+# Arguments
+- `genome`: Reference genome containing repeat elements with associated scaffold information
+- `experiment::Experiment`: Experiment data containing chromosome signals to attach
+- `peak_data::Bool`: If `true`, signals are treated as binary (BitVector); if `false`, as UInt16 vectors
+- `add_to_region::Bool`: If `true`, also attach signals to repeat regions
 """
 function addtorepeats!(genome, experiment::Experiment{T, V, R}; peak_data::Bool = false, add_to_region::Bool = false) where {T <: Real, V <: AbstractVector{T}, R <: Real}
     if peak_data
