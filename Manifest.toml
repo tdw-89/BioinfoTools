@@ -1423,7 +1423,6 @@ git-tree-sha1 = "bf07ae9fef2ca3c73f6b29e1da0aa0649b3048c8"
 repo-rev = "master"
 repo-url = "https://github.com/tk3369/YeoJohnsonTrans.jl"
 uuid = "bde5d4e9-ba51-5a47-b2d1-b5088a182367"
-version = "1.0.2"
 
 [[deps.Zlib_jll]]
 deps = ["Libdl"]
