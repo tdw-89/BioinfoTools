@@ -41,6 +41,7 @@ GenomicFeatures = "2.1.0"
 InteractiveUtils = "1.11.0"
 StatsBase = "0.34.6"
 XAM = "0.4.2"
+YeoJohnsonTrans = "0.1.0"
 julia = "1.10"
 
 [extras]
