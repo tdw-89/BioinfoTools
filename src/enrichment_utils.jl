@@ -404,7 +404,7 @@ column used as the independent variable.
 """
 function plot_enrich_region(
     paralog_df::DataFrame, 
-    gene_list::Vector{Gene}, 
+    gene_list::Vector{G}, 
     sample_groups::Vector{T}, 
     group_regions::Vector{GeneRange}; 
     fold_change_over_mean::Bool=false, 
@@ -413,7 +413,7 @@ function plot_enrich_region(
     return_figs::Bool=false,
     save_plots::Bool=false,
     target_var_col=3,
-    plot_save_dir::String=".") where T <: Union{Tuple, Vector{Int}}
+    plot_save_dir::String=".") where {T <: Union{Tuple, Vector{Int}}, G <: Gene}
 
     fig_vec = [GenericTrace[], Layout[]]
     for (i, sample_inds) in enumerate(sample_groups) 
@@ -538,7 +538,7 @@ normalisation, z-score scaling, and optional plot persistence.
 """
 function plot_enrich_percent(
     paralog_df::DataFrame, 
-    gene_list::Vector{Gene}, 
+    gene_list::Vector{G}, 
     sample_groups::Vector{T}; 
     fold_change_over_mean::Bool=false, 
     global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
@@ -547,7 +547,7 @@ function plot_enrich_percent(
     save_plots::Bool=false,
     target_var_col::Int=3,
     plot_save_dir::String="."
-    ) where T <: Union{Tuple, Vector{Int}}
+    ) where {T <: Union{Tuple, Vector{Int}}, G <: Gene}
     fig_vec = [GenericTrace[], Layout[]]
     for (i, sample_inds) in enumerate(sample_groups) 
         n_quantiles = 10
@@ -675,7 +675,7 @@ regions provided in `group_regions`. Keyword arguments align with
 """
 function plot_enrich_expr_region(
     expr_df::DataFrame, 
-    gene_list::Vector{Gene}, 
+    gene_list::Vector{G}, 
     sample_groups::Vector{T}, 
     group_regions::Vector{GeneRange}; 
         fold_change_over_mean::Bool=false, 
@@ -683,7 +683,7 @@ function plot_enrich_expr_region(
         z_min::Int=0, z_max::Int=4,
         return_figs::Bool=false,
         save_plots::Bool=false,
-        plot_save_dir::String=".") where T <: Union{Tuple, Vector{Int}}
+        plot_save_dir::String=".") where {T <: Union{Tuple, Vector{Int}}, G <: Gene}
 
     fig_vec = [GenericTrace[], Layout[]]
     for (i, sample_inds) in enumerate(sample_groups) 
@@ -788,14 +788,14 @@ and plot export.
 """
 function plot_enrich_expr_percent(
     expr_df::DataFrame, 
-    gene_list::Vector{Gene}, 
+    gene_list::Vector{G}, 
     sample_groups::Vector{T}; 
     fold_change_over_mean::Bool=false, 
     global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
     z_min::Int=0, z_max::Int=4,
     return_figs::Bool=false,
     save_plots::Bool=false,
-    plot_save_dir::String=".") where T <: Union{Tuple, Vector{Int}}
+    plot_save_dir::String=".") where {T <: Union{Tuple, Vector{Int}}, G <: Gene}
     fig_vec = [GenericTrace[], Layout[]]
     for (i, sample_inds) in enumerate(sample_groups) 
         sample_name = gene_list[1].samples[sample_inds[1]]
@@ -904,7 +904,7 @@ horizontally, or rendered as box plots depending on keyword arguments.
 - Additional keyword arguments control plot style and output
 """
 function plot_bar(paralog_df::DataFrame, 
-                  gene_list::Vector{Gene},
+                  gene_list::Vector{G},
                   sample_ind_groups::Vector{T},
                   region_list::Vector{GeneRange},
                   global_means::Vector{Float64},
@@ -914,7 +914,7 @@ function plot_bar(paralog_df::DataFrame,
                   save_plots::Bool=false,
                   box_plots::Bool=true,
                   ind_var_col=3,
-                  plot_save_dir::String=".") where T <: Union{Tuple, Vector{Int}}
+                  plot_save_dir::String=".") where {T <: Union{Tuple, Vector{Int}}, G <: Gene}
     @assert length(region_list) == length(global_means) == length(sample_ind_groups) "length of 'region_list', 'global_means', and 'sample_ind_groups' must be equal."
     fig_vec = []
     p_values = []
@@ -1079,7 +1079,7 @@ plots can be oriented horizontally or generated as box plots.
 - `plot_save_dir::String`: Directory to save plots to
 """
 function plot_bar_expr(expr_df::DataFrame, 
-                  gene_list::Vector{Gene}, 
+                  gene_list::Vector{G}, 
                   sample_ind_groups::Vector{T}, 
                   region_list::Vector{GeneRange}, 
                   global_means::Vector{Float64}, 
@@ -1088,7 +1088,7 @@ function plot_bar_expr(expr_df::DataFrame,
                   horizontal::Bool=false,
                   save_plots::Bool=false,
                   box_plots::Bool=true,
-                  plot_save_dir::String=".") where T <: Union{Tuple, Vector{Int}}
+                  plot_save_dir::String=".") where {T <: Union{Tuple, Vector{Int}}, G <: Gene}
     @assert length(region_list) == length(global_means) == length(sample_ind_groups) "length of 'region_list', 'global_means', and 'sample_ind_groups' must be equal."
     if return_figs
         fig_vec = []

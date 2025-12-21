@@ -1,6 +1,8 @@
-if !@isdefined Feature
-    include("genome_types.jl")
-end
+
+module MiscUtils
+using StatsBase
+using DataFrames
+using YeoJohnsonTrans
 """
     add_expression_to_paralogs(paralog_df, expression_df)
 
@@ -34,3 +36,10 @@ function add_expression_to_paralogs(paralog_df::DataFrame, expression_df::DataFr
     end
     return hcat(paralog_df, DataFrame("GeneExpr" => gene_expr_vals, "ParalogExpr" => paralog_expr_vals))
 end
+
+# helper function
+function normalize_yj(u::Vector{Float64})
+    v = YeoJohnsonTrans.transform(u)
+    return zscore(v)
+end
+end # module

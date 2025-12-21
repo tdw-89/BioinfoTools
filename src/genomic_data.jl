@@ -5,12 +5,14 @@ using XAM
 using CSV
 using CodecZlib: GzipDecompressorStream
 using BED
+import ..GenomeTypes: RNA, Exon, Intron, RefGenome, Gene
 export ChromData,
     SampleData,
     Experiment,
     PeakWarnings,
     getallrecords,
     getallcountvectors,
+    getexpression,
     average_bam_replicate_groups,
     average_peak_replicate_groups,
     average_bam_replicates,
@@ -448,7 +450,7 @@ function addexpression!(ref_genome, expr_data::DataFrame; total_expr::Bool = tru
         gene_id = row.GeneID
         gene_idx = findfirst(gene_id .== ref_genome.genes[1])
         isnothing(gene_idx) && continue
-        new_rna = RNA("all_transcripts", "mRNA", ref_genome.genes[2][gene_idx], Exon[], Intron[], names(row[3:end]), missing, missing, Float64.(Vector(row[2:end])))
+        new_rna =  RNA("all_transcripts", "mRNA", ref_genome.genes[2][gene_idx], Exon[], Intron[], names(row[3:end]), missing, missing, Float64.(Vector(row[2:end])))
         pushfirst!(ref_genome.genes[2][gene_idx].rnas, new_rna)
     end
     return
@@ -515,6 +517,10 @@ Return true if `gene` carries expression data.
 """
 function has_expr(gene)
     return !isempty(gene.rnas) && !isempty(gene.rnas[1].expression)
+end
+function getexpression(gene::Gene)
+    has_expr(gene) || error("Gene $(gene.id) has no expression data")
+    return gene.rnas[1].expression
 end
 """
     sample_to_bed_df(sample)

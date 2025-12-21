@@ -17,19 +17,21 @@ ones you need individually.
 """
 module BioinfoTools
 
+# Submodules
 include("genome_types.jl")
 include("genomic_data.jl")
 include("enrichment_utils.jl")
 include("load_gff.jl")
 include("paralog_utils.jl")
 include("alignment_utils.jl")
-
+include("misc_utils.jl")
 using .GenomeTypes
 using .GenomicData
 using .EnrichmentUtils
 using .LoadGFF
 using .ParalogUtils
 using .AlignmentUtils
+using .MiscUtils
 
 @doc raw"""
     GenomeTypes
