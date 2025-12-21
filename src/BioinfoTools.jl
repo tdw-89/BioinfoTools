@@ -24,6 +24,7 @@ include("enrichment_utils.jl")
 include("load_gff.jl")
 include("paralog_utils.jl")
 include("alignment_utils.jl")
+include("repeat_utils.jl")
 include("misc_utils.jl")
 using .GenomeTypes
 using .GenomicData
@@ -31,6 +32,7 @@ using .EnrichmentUtils
 using .LoadGFF
 using .ParalogUtils
 using .AlignmentUtils
+using .RepeatUtils
 using .MiscUtils
 
 @doc raw"""
@@ -68,5 +70,8 @@ export GenomeTypes,
         GenomicData, 
         EnrichmentUtils, 
         LoadGFF, 
-        ParalogUtils
+        ParalogUtils,
+        AlignmentUtils,
+        RepeatUtils,
+        MiscUtils
 end

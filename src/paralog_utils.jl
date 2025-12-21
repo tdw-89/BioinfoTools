@@ -612,6 +612,11 @@ function savegraphcsv(graph::MG, filename::String; force::Bool=false, add_names:
     end
 end
 
-export rbh, findfamilies, family_sizes, create_unweighted_graph, create_weighted_graph, savegraphcsv
+export rbh, 
+    findfamilies, 
+    family_sizes, 
+    create_unweighted_graph, 
+    create_weighted_graph, 
+    savegraphcsv
 
 end # module ParalogUtils
