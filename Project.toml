@@ -44,11 +44,11 @@ XAM = "0.4.2"
 YeoJohnsonTrans = "1.0.2"
 julia = "1.10"
 
-[source]
-YeoJohnsonTrans = {url = "https://github.com/tk3369/YeoJohnsonTrans.jl.git"}
-
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[source.YeoJohnsonTrans]
+url = "https://github.com/tk3369/YeoJohnsonTrans.jl.git"
 
 [targets]
 test = ["Test"]
