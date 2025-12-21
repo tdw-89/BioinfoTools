@@ -28,7 +28,7 @@ Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 Statistics = "10745b16-79ce-11e8-11f9-7d13ad32a3b2"
 StatsBase = "2913bbd2-ae8a-5f71-8c99-4fb6c76f3a91"
 XAM = "d759349c-bcba-11e9-07c2-5b90f8f05f7c"
-YeoJohnsonTrans = "4236c574-1900-44e3-aa41-0fcb6fed4f9a"
+YeoJohnson = "4236c574-1900-44e3-aa41-0fcb6fed4f9a"
 
 [compat]
 BED = "0.3.1"
@@ -41,8 +41,11 @@ GenomicFeatures = "2.1.0"
 InteractiveUtils = "1.11.0"
 StatsBase = "0.34.6"
 XAM = "0.4.2"
-YeoJohnsonTrans = "0.2.0"
+YeoJohnson = "0.2.0"
 julia = "1.10"
+
+[source]
+YeoJohnson = {url = "https://github.com/patrickm663/YeoJohnson.jl.git"}
 
 [extras]
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
