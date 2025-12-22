@@ -632,4 +632,17 @@ function _convert_signal_slice(signal_slice::AbstractVector)
     end
     return convert(Vector{UInt64}, signal_slice)
 end
+
+function distance(geneA::Gene, geneB::Gene)
+    ismissing(geneA.scaffold) && error("Gene $(geneA.id) is missing scaffold information")
+    ismissing(geneB.scaffold) && error("Gene $(geneB.id) is missing scaffold information")
+    geneA.scaffold.name != geneB.scaffold.name && return Inf
+    if geneA.gene_end < geneB.gene_start
+        return geneB.gene_start - geneA.gene_end
+    elseif geneB.gene_end < geneA.gene_start
+        return geneA.gene_start - geneB.gene_end
+    else
+        return 0
+    end
+end
 end # module GenomicData
