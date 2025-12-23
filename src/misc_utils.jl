@@ -38,8 +38,12 @@ function add_expression_to_paralogs(paralog_df::DataFrame, expression_df::DataFr
 end
 
 # helper function
-function normalize_yj(u::Vector{Float64})
+function normalize_yj(u::Vector{Float64}, z_score::Bool=true)
     v = YeoJohnsonTrans.transform(u)
-    return zscore(v)
+    if z_score
+        return zscore(v)
+    else
+        return v
+    end
 end
 end # module
