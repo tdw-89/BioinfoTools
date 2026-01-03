@@ -9,6 +9,7 @@ using ..GenomicData
 using CodecZlib
 using CSV
 using DataFrames
+using Logging
 
 
 function addrepeats!(ref_genome::RefGenome, stk_file::String)
@@ -183,7 +184,54 @@ function parsestk(stk_file::String)
     return repeat_df
 end
 
-function convert_to_repeats!(ref_genome::RefGenome, 
+function parse_rmout(rmout_file::String, te_only::Bool=false)
+
+    source = endswith(rmout_file, ".gz") ? GzipDecompressorStream(open(rmout_file, "r")) : rmout_file
+    df = with_logger(NullLogger()) do
+        CSV.read(source, DataFrame, header=false, skipto=4, delim=" ", ignorerepeated=true)
+    end
+    @assert ncol(df) >= 15 "RepeatMasker .out file must have at least 15 columns (when parsing by whitespace from 4th row on)."
+    if endswith(rmout_file, ".gz")
+        close(source)
+    end
+    if ncol(df) > 15
+        select!(df, 1:15)
+    end
+    rename!(df, [
+        :SW_score,
+        :perc_div,
+        :perc_del,
+        :perc_ins,
+        :query_sequence,
+        :query_start,
+        :query_end,
+        :query_left,
+        :strand,
+        :repeat_family,
+        :repeat_class,
+        :repeat_start,
+        :repeat_end,
+        :repeat_left,
+        :ID
+    ])
+    if te_only
+        filter!(row -> 
+            !occursin("simple_repeat", lowercase(row[:repeat_class])) && 
+            !occursin("low_complexity", lowercase(row[:repeat_class])) &&
+            !occursin("unknown", lowercase(row[:repeat_class])) &&
+            !occursin("trna", lowercase(row[:repeat_class])) && 
+            !occursin("rrna", lowercase(row[:repeat_class])),
+            df)
+    end
+    return df
+end
+
+"""
+This function converts a DataFrame of repeat data into Repeat objects and adds them to the provided RefGenome.
+The DataFrame must have the following columns: Chromosome, Start, End, Family, Type.
+If allow_missing_scaffolds is true, scaffolds not already present in the RefGenome will be created as needed.
+"""
+function convert_to_repeats!(ref_genome::RefGenome,
                              repeat_df::DataFrame;
                              allow_missing_scaffolds::Bool=false)
 
