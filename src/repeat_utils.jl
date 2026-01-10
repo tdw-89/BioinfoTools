@@ -75,7 +75,7 @@ function addrepeats!(ref_genome::RefGenome, stk_file::String)
     close(temp_handle)
 end
 
-function move_to_repeats!(ref_genome::RefGenome, gene_list::Vector{Gene})
+function move_to_repeats!(ref_genome::RefGenome, gene_list::Vector{G}) where G<:Gene
 
     for gene in gene_list
 
