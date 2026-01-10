@@ -119,7 +119,7 @@ function findoverlappinggenes(repeat_elem::Repeat)
         gene_start = gene.gene_start
         gene_end = gene.gene_end
 
-        if hasoverlap(repeat_start, gene_start, repeat_end, gene_end)
+        if GenomeTypes.hasoverlap(repeat_start, gene_start, repeat_end, gene_end)
 
             push!(overlap_ids, gene.id)
             push!(repeat_type, repeat_elem.type)
