@@ -57,12 +57,16 @@ do not match the expected pattern are kept verbatim and trigger a
 warning.
 """
 function sortNparsequantrange(quant_labels::Vector{String}; digs::Int=RANGE_PRECISION)
-    sorted_labels = sort(quant_labels, lt = natural)
+    # Sort by parsing the lower bound of each interval
+    sorted_labels = sort(quant_labels, by = label -> begin
+        mat = match(QUANT_RANGE_RE, label)
+        mat === nothing ? Inf : parse(Float64, mat["lval"])
+    end)
     ret_labels = String[]
     for label in sorted_labels
         mat = match(QUANT_RANGE_RE, label)
         if mat === nothing
-            push!(ret_labels, label)  # If it doesn't match the range pattern, show a warning
+            push!(ret_labels, label)
             @warn "Warning: label '$label' does not match the expected quantile range format. Keeping it as is."
             continue
         end
