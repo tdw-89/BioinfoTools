@@ -21,5 +21,5 @@ makedocs(;
     sitename = "BioinfoTools.jl",
     format = html_config,
     pages = pages,
-    warnonly = Documenter.except(:missing_docs),
+    warnonly = [:missing_docs],
 )

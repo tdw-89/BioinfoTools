@@ -24,6 +24,115 @@ const UBOUND_RE = r"[\])]{1}"
 const QUANT_RANGE_RE = r"^.*(?<lbound>[\[(]{1})\s*(?<lval>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*,\s*(?<uval>[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?)\s*(?<ubound>[\])]{1})$"
 const RANGE_PRECISION = 2  # Precision for rounding quantile range values
 
+struct SignalDistribution
+    mean::Float64
+    std_dev::Float64
+end
+
+function _select_group_normalizer(global_means, group_index::Int)
+    if global_means isa AbstractVector
+        if group_index ∉ eachindex(global_means)
+            error("global_means does not contain an entry for group_index=$group_index")
+        end
+        return global_means[group_index]
+    end
+    return global_means
+end
+
+function _apply_plot_normalization(
+    mat::AbstractArray{<:Real},
+    fold_change_over_mean::Bool,
+    global_means,
+    group_index::Int,
+)
+    if fold_change_over_mean
+        if isnothing(global_means)
+            mean_val = mean(mat)
+            if !(isfinite(mean_val)) || mean_val == 0
+                @warn "Cannot fold-change normalize: mean(mat) is non-finite or zero; skipping normalization."
+                return mat
+            end
+            return mat ./ mean_val
+        end
+
+        norm_obj = _select_group_normalizer(global_means, group_index)
+        if norm_obj isa SignalDistribution
+            mean_val = norm_obj.mean
+        elseif norm_obj isa Real
+            mean_val = Float64(norm_obj)
+        else
+            error("Invalid global_means element type $(typeof(norm_obj)) for fold-change normalization")
+        end
+        if !(isfinite(mean_val)) || mean_val == 0
+            @warn "Cannot fold-change normalize: mean value is non-finite or zero; skipping normalization."
+            return mat
+        end
+        return mat ./ mean_val
+    end
+
+    # If fold-change is disabled, optionally z-score when a SignalDistribution is provided.
+    if isnothing(global_means)
+        return mat
+    end
+    norm_obj = _select_group_normalizer(global_means, group_index)
+    if norm_obj isa SignalDistribution
+        if !(isfinite(norm_obj.mean)) || !(isfinite(norm_obj.std_dev))
+            @warn "Cannot z-score normalize: SignalDistribution contains non-finite values; skipping normalization."
+            return mat
+        end
+        if norm_obj.std_dev <= 0
+            @warn "Cannot z-score normalize: std_dev <= 0; skipping normalization."
+            return mat
+        end
+        return (mat .- norm_obj.mean) ./ norm_obj.std_dev
+    end
+    return mat
+end
+
+function _apply_plot_normalization(
+    val::Real,
+    fold_change_over_mean::Bool,
+    global_means,
+    group_index::Int,
+)
+    if fold_change_over_mean
+        if isnothing(global_means)
+            return Float64(val)
+        end
+
+        norm_obj = _select_group_normalizer(global_means, group_index)
+        if norm_obj isa SignalDistribution
+            mean_val = norm_obj.mean
+        elseif norm_obj isa Real
+            mean_val = Float64(norm_obj)
+        else
+            error("Invalid global_means element type $(typeof(norm_obj)) for fold-change normalization")
+        end
+        if !(isfinite(mean_val)) || mean_val == 0
+            @warn "Cannot fold-change normalize: mean value is non-finite or zero; skipping normalization."
+            return Float64(val)
+        end
+        return Float64(val) / mean_val
+    end
+
+    if isnothing(global_means)
+        return Float64(val)
+    end
+    norm_obj = _select_group_normalizer(global_means, group_index)
+    if norm_obj isa SignalDistribution
+        if !(isfinite(norm_obj.mean)) || !(isfinite(norm_obj.std_dev))
+            @warn "Cannot z-score normalize: SignalDistribution contains non-finite values; skipping normalization."
+            return Float64(val)
+        end
+        if norm_obj.std_dev <= 0
+            @warn "Cannot z-score normalize: std_dev <= 0; skipping normalization."
+            return Float64(val)
+        end
+        return (Float64(val) - norm_obj.mean) / norm_obj.std_dev
+    end
+    return Float64(val)
+end
+
 """
     parse_quantile(q::String; digs::Int=RANGE_PRECISION)
 Normalize a quantile-range label by rounding the numeric bounds to
@@ -397,10 +506,11 @@ column used as the independent variable.
 - `gene_list::Vector{Gene}`: Genes to plot enrichment for
 - `sample_groups::Vector`: Vector of sample index tuples or vectors for grouping
 - `group_regions::Vector{GeneRange}`: Regions to plot for each sample group
-- `fold_change_over_mean::Bool`: If `true`, normalize by global mean
-- `global_means::Union{Float64, Vector{Float64}, Nothing}`: Global mean values for normalization
-- `z_min::Int`: Minimum z-score for color scale
-- `z_max::Int`: Maximum z-score for color scale
+- `group_regions::Vector{GeneRange}`: Regions to plot for each sample group
+- `fold_change_over_mean::Bool`: If `true`, normalize by the mean (fold-change). If `false` and `global_means` is a `SignalDistribution`, use z-score normalization.
+- `global_means::Union{Nothing, Float64, Vector{Float64}, SignalDistribution, Vector{SignalDistribution}}`: Global mean value(s) or distribution(s) used for normalization
+- `z_min::Int`: Minimum z-axis value for color scale
+- `z_max::Int`: Maximum z-axis value for color scale
 - `return_figs::Bool`: If `true`, return plot objects instead of displaying
 - `save_plots::Bool`: If `true`, save plots to disk
 - `target_var_col`: Column index or name in `paralog_df` containing the grouping variable
@@ -412,7 +522,7 @@ function plot_enrich_region(
     sample_groups::Vector{T}, 
     group_regions::Vector{GeneRange}; 
     fold_change_over_mean::Bool=false, 
-    global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
+    global_means::Union{Nothing, Float64, Vector{Float64}, SignalDistribution, Vector{SignalDistribution}}=nothing,
     z_min::Int=0, z_max::Int=4,
     return_figs::Bool=false,
     save_plots::Bool=false,
@@ -478,16 +588,7 @@ function plot_enrich_region(
             end
             positional_count_mat[:,d] .= positional_count_mat[:,d] ./ length(qual_gene_ind_pairs)
         end
-        if fold_change_over_mean
-            if isnothing(global_means)
-                mean_val = mean(positional_count_mat)
-            elseif typeof(global_means) == Vector{Float64}
-                mean_val = global_means[i]
-            else
-                mean_val = global_means
-            end
-            positional_count_mat = positional_count_mat / mean_val
-        end
+        positional_count_mat = _apply_plot_normalization(positional_count_mat, fold_change_over_mean, global_means, i)
         layout_1 = Layout(
             xaxis_side="bottom",
             title="$sample_name positional enrichment vs. ds $n_quantiles-quantile",
@@ -545,7 +646,7 @@ function plot_enrich_percent(
     gene_list::Vector{G}, 
     sample_groups::Vector{T}; 
     fold_change_over_mean::Bool=false, 
-    global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
+    global_means::Union{Nothing, Float64, Vector{Float64}, SignalDistribution, Vector{SignalDistribution}}=nothing,
     z_min::Int=0, z_max::Int=4,
     return_figs::Bool=false,
     save_plots::Bool=false,
@@ -603,16 +704,7 @@ function plot_enrich_percent(
             end
             positional_count_mat[:,d] .= positional_count_mat[:,d] ./ length(qual_gene_ind_pairs)
         end
-        if fold_change_over_mean
-            if isnothing(global_means)
-                mean_val = mean(positional_count_mat)
-            elseif typeof(global_means) == Vector{Float64}
-                mean_val = global_means[i]
-            else
-                mean_val = global_means
-            end
-            positional_count_mat = positional_count_mat / mean_val
-        end
+        positional_count_mat = _apply_plot_normalization(positional_count_mat, fold_change_over_mean, global_means, i)
         layout_1 = Layout(
             xaxis_side="bottom",
             title="$sample_name positional enrichment vs. ds $n_quantiles-quantile",
@@ -683,7 +775,7 @@ function plot_enrich_expr_region(
     sample_groups::Vector{T}, 
     group_regions::Vector{GeneRange}; 
         fold_change_over_mean::Bool=false, 
-        global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
+        global_means::Union{Nothing, Float64, Vector{Float64}, SignalDistribution, Vector{SignalDistribution}}=nothing,
         z_min::Int=0, z_max::Int=4,
         return_figs::Bool=false,
         save_plots::Bool=false,
@@ -728,16 +820,7 @@ function plot_enrich_expr_region(
             end
             positional_count_mat[:,d] .= positional_count_mat[:,d] ./ length(qual_genes)
         end
-        if fold_change_over_mean
-            if isnothing(global_means)
-                mean_val = mean(positional_count_mat)
-            elseif typeof(global_means) == Vector{Float64}
-                mean_val = global_means[i]
-            else
-                mean_val = global_means
-            end
-            positional_count_mat = positional_count_mat / mean_val
-        end
+        positional_count_mat = _apply_plot_normalization(positional_count_mat, fold_change_over_mean, global_means, i)
         layout_1 = Layout(
             xaxis_side="bottom",
             title="$sample_name positional enrichment vs. expr $n_quantiles-quantile",
@@ -795,7 +878,7 @@ function plot_enrich_expr_percent(
     gene_list::Vector{G}, 
     sample_groups::Vector{T}; 
     fold_change_over_mean::Bool=false, 
-    global_means::Union{Float64, Vector{Float64}, Nothing}=nothing,
+    global_means::Union{Nothing, Float64, Vector{Float64}, SignalDistribution, Vector{SignalDistribution}}=nothing,
     z_min::Int=0, z_max::Int=4,
     return_figs::Bool=false,
     save_plots::Bool=false,
@@ -842,16 +925,7 @@ function plot_enrich_expr_percent(
             end
             positional_count_mat[:,d] .= positional_count_mat[:,d] ./ length(qual_genes)
         end
-        if fold_change_over_mean
-            if isnothing(global_means)
-                mean_val = mean(positional_count_mat)
-            elseif typeof(global_means) == Vector{Float64}
-                mean_val = global_means[i]
-            else
-                mean_val = global_means
-            end
-            positional_count_mat = positional_count_mat / mean_val
-        end
+        positional_count_mat = _apply_plot_normalization(positional_count_mat, fold_change_over_mean, global_means, i)
         layout_1 = Layout(
             xaxis_side="bottom",
             title="$sample_name positional enrichment vs. expr $n_quantiles-quantile",
@@ -896,15 +970,18 @@ end
 Generate summary plots for each region, aggregating average signal across
 `sample_ind_groups`. Results can be returned, saved, oriented
 horizontally, or rendered as box plots depending on keyword arguments.
-`global_means` provides the baseline for fold-change calculations.
+If `fold_change_over_mean=true`, `global_means` provides the baseline for
+fold-change calculations. If `fold_change_over_mean=false` and
+`global_means` contains `SignalDistribution` entries, values are
+z-score normalised.
 
 # Arguments
 - `paralog_df::DataFrame`: DataFrame containing gene information with quantile or categorical data in column specified by `target_var_col`
 - `gene_list::Vector{Gene}`: Genes to include in the plots
 - `sample_ind_groups::Vector`: Vector of sample index tuples or vectors for grouping
 - `region_list::Vector{GeneRange}`: Regions to aggregate signal over
-- `global_means::Union{Float64, Vector{Float64}}`: Mean values for fold-change normalization
-- `y_range::Tuple{Real, Real}`: Y-axis range for plots
+- `global_means::AbstractVector{<:Union{Float64, SignalDistribution}}`: Mean values (or distributions) for normalization
+- `y_range::Union{Nothing, Vector{Int}}`: Y-axis range for plots (or `nothing` to auto-scale)
 - Additional keyword arguments control plot style and output
 """
 function plot_bar(paralog_df::DataFrame, 
@@ -913,6 +990,36 @@ function plot_bar(paralog_df::DataFrame,
                   region_list::Vector{GeneRange},
                   global_means::Vector{Float64},
                   y_range::Union{Nothing, Vector{Int}},
+                  return_figs::Bool=true,
+                  horizontal::Bool=false,
+                  save_plots::Bool=false,
+                  box_plots::Bool=true,
+                  ind_var_col=3,
+                  plot_save_dir::String=".") where {T <: Union{Tuple, Vector{Int}}, G <: Gene}
+    return plot_bar(
+        paralog_df,
+        gene_list,
+        sample_ind_groups,
+        region_list,
+        global_means,
+        y_range;
+        fold_change_over_mean=true,
+        return_figs=return_figs,
+        horizontal=horizontal,
+        save_plots=save_plots,
+        box_plots=box_plots,
+        ind_var_col=ind_var_col,
+        plot_save_dir=plot_save_dir,
+    )
+end
+
+function plot_bar(paralog_df::DataFrame, 
+                  gene_list::Vector{G},
+                  sample_ind_groups::Vector{T},
+                  region_list::Vector{GeneRange},
+                  global_means::AbstractVector{<:Union{Float64, SignalDistribution}},
+                  y_range::Union{Nothing, Vector{Int}};
+                  fold_change_over_mean::Bool=true,
                   return_figs::Bool=true,
                   horizontal::Bool=false,
                   save_plots::Bool=false,
@@ -946,15 +1053,8 @@ function plot_bar(paralog_df::DataFrame,
         n_quantiles = length(unique(gene_ds_quantiles))
         pair_means = [Vector{Float64}() for i in 1:n_quantiles]
         for d in 1:n_quantiles
-            # Find the indices of all the gene pairs in the paralog df whose ds is in quantile 'd'.
-            # Stop after identifying ⌊n pairs / 2⌋ pairs and their associated indices in the 
-            # 'gene_list'. 
             gene_pair_inds = findall(gene_ds_quantiles .== d)
-            # shuffle!(gene_pair_inds)
-            # q_1 = Tuple{String, String}[] # DEBUG REMOVE
-            # q_2 = Tuple{String, String}[] # DEBUG REMOVE
             qual_gene_ind_pairs = Vector{Tuple{Int, Int}}()
-            # max_pairs = length(gene_pair_inds)
             for ind in gene_pair_inds
                 gene_1 = paralog_df[ind, 1]
                 gene_2 = paralog_df[ind, 2]
@@ -965,20 +1065,17 @@ function plot_bar(paralog_df::DataFrame,
                 end
             end
             for i in eachindex(qual_gene_ind_pairs)
-                # Get the average count within the specified region for each sample in sample_inds. Then average across samples.
                 gene_sigs = [getsiginrange(gene_list[qual_gene_ind_pairs[i][1]], region_list[r], sample_ind) for sample_ind in sample_inds]
                 if !any(ismissing.(gene_sigs))
                     pair_pos_count_gene = mean(reduce(vcat, gene_sigs))
                 end
-                # Repeat the for the second gene in the paralog pair
                 paralog_sigs = [getsiginrange(gene_list[qual_gene_ind_pairs[i][2]], region_list[r], sample_ind) for sample_ind in sample_inds]
                 if !any(ismissing.(paralog_sigs))
                     pair_pos_count_paralog = mean(reduce(vcat, paralog_sigs))
                 end
-                # Add the average of the two to the vector of average counts for the current quantile
                 if !any(ismissing.(gene_sigs)) && !any(ismissing.(paralog_sigs))
                     pair_average = mean([pair_pos_count_gene, pair_pos_count_paralog])
-                    push!(pair_means[d], pair_average/global_means[r])
+                    push!(pair_means[d], _apply_plot_normalization(pair_average, fold_change_over_mean, global_means, r))
                 else
                     @warn "skipping $(gene_list[qual_gene_ind_pairs[i][1]].id) and $(gene_list[qual_gene_ind_pairs[i][2]].id)
                     One or both genes do not have data in the specified region for samples $(gene_list[qual_gene_ind_pairs[i][2]].samples[sample_inds])."
@@ -1006,7 +1103,6 @@ function plot_bar(paralog_df::DataFrame,
                     quantile_nums = vcat(quantile_nums, fill(i, length(mean_dist)))
                 end
             end
-            # Create a box plot for the values across quantiles
             temp_df = DataFrame(
                 :X => quantile_nums,
                 :Y => vals
@@ -1069,12 +1165,17 @@ signals across regions and sample groups before plotting. Figures and
 summary statistics are optionally returned depending on `return_figs`;
 plots can be oriented horizontally or generated as box plots.
 
+If `fold_change_over_mean=true`, values are normalised by the supplied
+means (fold-change). If `fold_change_over_mean=false` and
+`global_means` contains `SignalDistribution` entries, values are
+z-score normalised.
+
 # Arguments
 - `expr_df::DataFrame`: DataFrame containing expression data with a `GeneID` column and an `Avg` column for average expression values
 - `gene_list::Vector{Gene}`: Genes to include in the plots
 - `sample_ind_groups::Vector`: Vector of sample index tuples or vectors for grouping
 - `region_list::Vector{GeneRange}`: Regions to aggregate signal over
-- `global_means::Vector{Float64}`: Mean values for fold-change normalization
+- `global_means::AbstractVector{<:Union{Float64, SignalDistribution}}`: Mean values (or distributions) for normalization
 - `y_range::Union{Nothing, Vector{Int}}`: Y-axis range for plots
 - `return_figs::Bool`: If `true`, return plot objects instead of displaying
 - `horizontal::Bool`: If `true`, create horizontal bar plots
@@ -1088,6 +1189,34 @@ function plot_bar_expr(expr_df::DataFrame,
                   region_list::Vector{GeneRange}, 
                   global_means::Vector{Float64}, 
                   y_range::Union{Nothing, Vector{Int}},
+                  return_figs::Bool=false,
+                  horizontal::Bool=false,
+                  save_plots::Bool=false,
+                  box_plots::Bool=true,
+                  plot_save_dir::String=".") where {T <: Union{Tuple, Vector{Int}}, G <: Gene}
+    return plot_bar_expr(
+        expr_df,
+        gene_list,
+        sample_ind_groups,
+        region_list,
+        global_means,
+        y_range;
+        fold_change_over_mean=true,
+        return_figs=return_figs,
+        horizontal=horizontal,
+        save_plots=save_plots,
+        box_plots=box_plots,
+        plot_save_dir=plot_save_dir,
+    )
+end
+
+function plot_bar_expr(expr_df::DataFrame, 
+                  gene_list::Vector{G}, 
+                  sample_ind_groups::Vector{T}, 
+                  region_list::Vector{GeneRange}, 
+                  global_means::AbstractVector{<:Union{Float64, SignalDistribution}}, 
+                  y_range::Union{Nothing, Vector{Int}};
+                  fold_change_over_mean::Bool=true,
                   return_figs::Bool=false,
                   horizontal::Bool=false,
                   save_plots::Bool=false,
@@ -1126,13 +1255,12 @@ function plot_bar_expr(expr_df::DataFrame,
             gene_ids = expr_df_quantiles[expr_df_quantiles.Quantile .== d, :GeneID]
             gene_inds = findall([gene.id in gene_ids for gene in gene_list])
             for i in eachindex(gene_inds)
-                # Get the average count within the specified region for each sample in sample_inds
                 gene_sigs = [getsiginrange(gene_list[gene_inds[i]], region_list[r], sample_ind) for sample_ind in sample_inds]
                 if !any(ismissing.(gene_sigs))
                     pos_count_gene = mean(reduce(vcat, gene_sigs))
                 end
                 if !any(ismissing.(gene_sigs))
-                    push!(quantile_means[d], pos_count_gene / global_means[r])
+                    push!(quantile_means[d], _apply_plot_normalization(pos_count_gene, fold_change_over_mean, global_means, r))
                 else
                     @warn "skipping $(gene_list[gene_inds[i]].id)
                     Does not have data in the specified region for samples $(gene_list[gene_inds[i]].samples[sample_inds])."
@@ -1160,7 +1288,6 @@ function plot_bar_expr(expr_df::DataFrame,
                     quantile_nums = vcat(quantile_nums, fill(i, length(mean_dist)))
                 end
             end
-            # Create a box plot for the values across quantiles
             temp_df = DataFrame(
                 :X => quantile_nums,
                 :Y => vals
