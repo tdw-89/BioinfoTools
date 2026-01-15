@@ -11,7 +11,6 @@ using CSV
 using DataFrames
 using Logging
 
-
 function addrepeats!(ref_genome::RefGenome, stk_file::String)
 
     temp_handle = open(stk_file, "r")

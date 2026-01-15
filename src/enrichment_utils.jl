@@ -1027,7 +1027,7 @@ function plot_bar(paralog_df::DataFrame,
                   ind_var_col=3,
                   plot_save_dir::String=".") where {T <: Union{Tuple, Vector{Int}}, G <: Gene}
     @assert length(region_list) == length(global_means) == length(sample_ind_groups) "length of 'region_list', 'global_means', and 'sample_ind_groups' must be equal."
-    fig_vec = []
+    fig_vec = return_figs ? [GenericTrace[], Layout[]] : nothing
     p_values = []
     means_vecs = Vector{Vector{Vector{Float64}}}() # DEBUG REMOVE
     for (r, sample_inds) in enumerate(sample_ind_groups)
@@ -1094,61 +1094,51 @@ function plot_bar(paralog_df::DataFrame,
             end
             push!(quant_ranges, quant_range)
         end
+        # Build a trace (GenericTrace) + layout, and apply axis range on the layout.
+        trace = nothing
+        layout = Layout()
+        if !isnothing(y_range) && length(y_range) != 2
+            @warn "Invalid y_range. Must be either nothing or a vector of length 2."
+        end
         if box_plots
-            vals = []
-            quantile_nums = []
+            vals = Float64[]
+            group_labels = String[]
             for (i, mean_dist) in enumerate(pair_means)
                 if !isempty(mean_dist)
-                    vals = vcat(vals, mean_dist)
-                    quantile_nums = vcat(quantile_nums, fill(i, length(mean_dist)))
+                    append!(vals, Float64.(mean_dist))
+                    append!(group_labels, fill(quant_ranges[i], length(mean_dist)))
                 end
             end
-            temp_df = DataFrame(
-                :X => quantile_nums,
-                :Y => vals
-            )
             if horizontal
-                bar_plt = plot(temp_df, x=:Y, y=:X, kind="box", orientation = "h")
+                trace = box(x=vals, y=group_labels, orientation="h")
             else
-                bar_plt = plot(temp_df, x=:X, y=:Y, kind="box")
-            end
-        elseif isnothing(y_range)
-            bar_plt = bar(
-                x=[mean(pair_mean_dist) for pair_mean_dist in pair_means],
-                y=quant_ranges,
-                orientation = horizontal ? "h" : "v"
-            )
-        elseif length(y_range) == 2
-            if horizontal
-                bar_plt = bar(
-                    x=[mean(pair_mean_dist) for pair_mean_dist in pair_means],
-                    y=quant_ranges,
-                    orientation = "h",
-                    xaxis=attr(range=y_range)
-                )
-            else
-                bar_plt = bar(
-                    x=[mean(pair_mean_dist) for pair_mean_dist in pair_means],
-                    y=quant_ranges,
-                    orientation = "v",
-                    yaxis=attr(range=y_range)
-                )
+                trace = box(x=group_labels, y=vals)
             end
         else
-            @warn "Invalid y_range. Must be either nothing or a vector of length 2."
-            bar_plt = bar(
-                x=[mean(pair_mean_dist) for pair_mean_dist in pair_means],
-                y=quant_ranges,
-                orientation = horizontal ? "h" : "v"
-            )
+            means = [isempty(dist) ? NaN : mean(dist) for dist in pair_means]
+            if horizontal
+                trace = bar(x=means, y=quant_ranges, orientation="h")
+            else
+                trace = bar(x=quant_ranges, y=means, orientation="v")
+            end
         end
+        if !isnothing(y_range) && length(y_range) == 2
+            if horizontal
+                layout = Layout(xaxis=attr(range=y_range))
+            else
+                layout = Layout(yaxis=attr(range=y_range))
+            end
+        end
+
+        plt = plot(trace, layout)
         if save_plots
-            savefig(box_plots ? bar_plt : plot(bar_plt), joinpath(plot_save_dir, "$(sample_name)_region_enrichment_vs_ds_$(n_quantiles)-quantile_average_bar.html"))
+            savefig(plt, joinpath(plot_save_dir, "$(sample_name)_region_enrichment_vs_ds_$(n_quantiles)-quantile_average_bar.html"))
         end
         if return_figs
-            push!(fig_vec, bar_plt)
+            push!(fig_vec[1], trace)
+            push!(fig_vec[2], layout)
         else
-            display(plot(bar_plt))
+            display(plt)
         end
         push!(p_values, KruskalWallisTest(pair_means...))
         push!(means_vecs, pair_means)
@@ -1223,9 +1213,7 @@ function plot_bar_expr(expr_df::DataFrame,
                   box_plots::Bool=true,
                   plot_save_dir::String=".") where {T <: Union{Tuple, Vector{Int}}, G <: Gene}
     @assert length(region_list) == length(global_means) == length(sample_ind_groups) "length of 'region_list', 'global_means', and 'sample_ind_groups' must be equal."
-    if return_figs
-        fig_vec = []
-    end
+    fig_vec = return_figs ? [GenericTrace[], Layout[]] : nothing
     p_values = []
     means_vecs = Vector{Vector{Vector{Float64}}}()
     n_quantiles = 10
@@ -1279,61 +1267,50 @@ function plot_bar_expr(expr_df::DataFrame,
             end
             push!(quant_ranges, quant_range)
         end
+        trace = nothing
+        layout = Layout()
+        if !isnothing(y_range) && length(y_range) != 2
+            @warn "Invalid y_range. Must be either nothing or a vector of length 2."
+        end
         if box_plots
-            vals = []
-            quantile_nums = []
+            vals = Float64[]
+            group_labels = String[]
             for (i, mean_dist) in enumerate(quantile_means)
                 if !isempty(mean_dist)
-                    vals = vcat(vals, mean_dist)
-                    quantile_nums = vcat(quantile_nums, fill(i, length(mean_dist)))
+                    append!(vals, Float64.(mean_dist))
+                    append!(group_labels, fill(quant_ranges[i], length(mean_dist)))
                 end
             end
-            temp_df = DataFrame(
-                :X => quantile_nums,
-                :Y => vals
-            )
             if horizontal
-                bar_plt = plot(temp_df, x=:Y, y=:X, kind="box", orientation = "h")
+                trace = box(x=vals, y=group_labels, orientation="h")
             else
-                bar_plt = plot(temp_df, x=:X, y=:Y, kind="box")
-            end
-        elseif isnothing(y_range)
-            bar_plt = bar(
-                x=[mean(mean_dist) for mean_dist in quantile_means],
-                y=quant_ranges,
-                orientation = horizontal ? "h" : "v"
-            )
-        elseif length(y_range) == 2
-            if horizontal
-                bar_plt = bar(
-                    x=[mean(mean_dist) for mean_dist in quantile_means],
-                    y=quant_ranges,
-                    orientation = "h",
-                    xaxis=attr(range=y_range)
-                )
-            else
-                bar_plt = bar(
-                    x=[mean(mean_dist) for mean_dist in quantile_means],
-                    y=quant_ranges,
-                    orientation = "v",
-                    yaxis=attr(range=y_range)
-                )
+                trace = box(x=group_labels, y=vals)
             end
         else
-            @warn "Invalid y_range. Must be either nothing or a vector of length 2."
-            bar_plt = bar(
-                x=[mean(mean_dist) for mean_dist in quantile_means],
-                y=quant_ranges,
-                orientation = horizontal ? "h" : "v"
-            )
+            means = [isempty(dist) ? NaN : mean(dist) for dist in quantile_means]
+            if horizontal
+                trace = bar(x=means, y=quant_ranges, orientation="h")
+            else
+                trace = bar(x=quant_ranges, y=means, orientation="v")
+            end
         end
+        if !isnothing(y_range) && length(y_range) == 2
+            if horizontal
+                layout = Layout(xaxis=attr(range=y_range))
+            else
+                layout = Layout(yaxis=attr(range=y_range))
+            end
+        end
+
+        plt = plot(trace, layout)
         if save_plots
-            savefig(box_plots ? bar_plt : plot(bar_plt), joinpath(plot_save_dir, "$(sample_name)_average_enrichment_vs_expr_$(n_quantiles)-quantile_bar.html"))
+            savefig(plt, joinpath(plot_save_dir, "$(sample_name)_average_enrichment_vs_expr_$(n_quantiles)-quantile_bar.html"))
         end
         if return_figs
-            push!(fig_vec, bar_plt)
+            push!(fig_vec[1], trace)
+            push!(fig_vec[2], layout)
         else
-            display(plot(bar_plt))
+            display(plt)
         end
         push!(p_values, KruskalWallisTest(quantile_means...))
         push!(means_vecs, quantile_means)
