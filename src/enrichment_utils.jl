@@ -134,6 +134,17 @@ function _apply_plot_normalization(
 end
 
 """
+    η²(kw_test::KruskalWallisTest)
+Calculate eta-squared (η²) effect size from a Kruskal-Wallis test result.
+"""
+function η²(kw_test::KruskalWallisTest)
+    H = kw_test.H
+    N = sum(kw_test.n_i)
+    k = length(kw_test.n_i)
+    return (H - k + 1) / (N - k)
+end
+
+"""
     parse_quantile(q::String; digs::Int=RANGE_PRECISION)
 Normalize a quantile-range label by rounding the numeric bounds to
 `digs` decimal places while preserving the original bracket style. If
@@ -1585,5 +1596,6 @@ export parse_quantile,
        intergenic_dist,
        perm_cor_2side,
        get_cor,
-       get_cor_expr
+       get_cor_expr,
+       η²
 end # module

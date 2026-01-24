@@ -58,10 +58,30 @@ function parseattributes(attrs::Vector{Pair{String, Vector{String}}})
 end
 """
     get_id(id_string)
+
+Strip an ID string of prefixes before ':' and suffixes after '-'.
+
+# Arguments
+- `id_string::String`: The raw ID string (e.g., "transcript:WBGene00000001-1")
+
+# Returns
+- `String`: The cleaned ID (e.g., "WBGene00000001")
+
+# Notes
+This handles cases where:
+- Transcripts have "transcript:" or similar prefixes
+- Exons/RNAs have "-1", "-2" suffixes appended to parent IDs
 """
 function get_id(id_string::String)
-    id_split = split(id_string, r"[:\-]")
-    return length(id_split) > 1 ? join(id_split[2:end], "-") : first(id_split)
+    # Strip anything before ':' (take everything after the last ':')
+    if contains(id_string, ':')
+        id_string = last(split(id_string, ':'))
+    end
+    # Strip anything after '-' (take everything before the first '-')
+    if contains(id_string, '-')
+        id_string = first(split(id_string, '-'))
+    end
+    return id_string
 end
 """
     get_id(id_field, dict)

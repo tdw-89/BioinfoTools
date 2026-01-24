@@ -18,14 +18,14 @@ const GT = BioinfoTools.GenomeTypes
         # Test ID with transcript: prefix
         @test LG.get_id("transcript:ENST00012345") == "ENST00012345"
         
-        # Test ID with hyphen separator
-        @test LG.get_id("gene-CELE_2L52.1") == "CELE_2L52.1"
+        # Test ID with hyphen suffix (should strip after hyphen)
+        @test LG.get_id("CELE_2L52.1-1") == "CELE_2L52.1"
         
         # Test ID without prefix (should return as-is)
         @test LG.get_id("GENE0001") == "GENE0001"
         
-        # Test ID with multiple separators
-        @test LG.get_id("gene:ENSG-12345-AB") == "ENSG-12345-AB"
+        # Test ID with prefix and suffix (should strip both)
+        @test LG.get_id("transcript:ENSG12345-1") == "ENSG12345"
     end
     
     @testset "get_id - Dictionary lookup" begin
@@ -33,8 +33,8 @@ const GT = BioinfoTools.GenomeTypes
         dict = Dict("ID" => ["gene:TEST001"], "Name" => ["TestGene"])
         @test LG.get_id("ID", dict) == "TEST001"
         
-        # Test successful ID retrieval with custom field
-        dict = Dict("gene_id" => ["gene-CUSTOM123"], "Name" => ["CustomGene"])
+        # Test successful ID retrieval with custom field (strips after hyphen)
+        dict = Dict("gene_id" => ["gene:CUSTOM123-1"], "Name" => ["CustomGene"])
         @test LG.get_id("gene_id", dict) == "CUSTOM123"
         
         # Test missing ID field returns nothing
@@ -45,9 +45,9 @@ const GT = BioinfoTools.GenomeTypes
         dict = Dict("ID" => ["gene:TEST002"])
         @test_logs (:warn, r"'custom_field' not found") LG.get_id("custom_field", dict) === nothing
         
-        # Test ID field with complex prefix
-        dict = Dict("ID" => ["transcript:ENST-00012345-1"])
-        @test LG.get_id("ID", dict) == "ENST-00012345-1"
+        # Test ID field with prefix and suffix (strips both)
+        dict = Dict("ID" => ["transcript:ENST00012345-1"])
+        @test LG.get_id("ID", dict) == "ENST00012345"
     end
     
     @testset "parseattributes" begin
