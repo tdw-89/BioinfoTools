@@ -222,12 +222,10 @@ function loadgff(gff_file::String, chrom_lengths_file::Union{String, Nothing}=no
                                     feature_type::String="gene", 
                                     genome::Union{RefGenome, Nothing}=nothing,
                                     alt_id_field::Union{String, Nothing}=nothing)
-    # Load the chromosome lengths files, and make sure the chromosome names are strings:
-    using_chrom_file = false
+    # Load the chromosome lengths from file or derive from GFF file (preferred)
     if isnothing(chrom_lengths_file)
         chrom_lengths = getchromlengths(gff_file)
     else
-        using_chrom_file = true
         chrom_lengths = CSV.read(chrom_lengths_file, DataFrame, header=false)
         chrom_lengths[!, 1] = string.(chrom_lengths[!, 1])
     end
@@ -244,13 +242,27 @@ function loadgff(gff_file::String, chrom_lengths_file::Union{String, Nothing}=no
     else
         ref_genome = genome
     end
+    # Create all scaffolds upfront from chromosome lengths
+    for row in eachrow(chrom_lengths)
+        seqid = string(row[1])
+        chrom_length = row[2]
+        if !haskey(ref_genome.scaffolds, seqid)
+            ref_genome.scaffolds[seqid] = Scaffold(seqid,
+                                                   missing,
+                                                   Gene[],
+                                                   Repeat[],
+                                                   1,
+                                                   chrom_length,
+                                                   missing)
+        end
+    end
     # Create place holders for the prev_gene and prev_rna variables
     prev_gene::Union{Nothing, Gene} = nothing
     prev_rna::Union{Nothing, RNA} = nothing
     if lowercase(feature_type) == "all"
         for record in reader
             if GFF3.featuretype(record) == "gene"
-                parsegene!(record, ref_genome, chrom_lengths, using_chrom_file; alt_id_field=alt_id_field)
+                parsegene!(record, ref_genome; alt_id_field=alt_id_field)
                 prev_gene = last(ref_genome.genes[2])
             elseif contains(GFF3.featuretype(record), "RNA")
                 parserna!(record, ref_genome, prev_gene)
@@ -269,7 +281,7 @@ function loadgff(gff_file::String, chrom_lengths_file::Union{String, Nothing}=no
     elseif lowercase(feature_type) == "gene"
         for record in reader
             if GFF3.featuretype(record) == "gene"
-                parsegene!(record, ref_genome, chrom_lengths, using_chrom_file; alt_id_field=alt_id_field)
+                parsegene!(record, ref_genome; alt_id_field=alt_id_field)
             end
         end
         if ret_ref
@@ -282,20 +294,18 @@ function loadgff(gff_file::String, chrom_lengths_file::Union{String, Nothing}=no
     end
 end
 """
-    parsegene!(record, refs, chrom_lengths, using_chrom_file; alt_id_field=nothing)
+    parsegene!(record, refs; alt_id_field=nothing)
 Parse a gene record from a GFF file and add it to the reference genome.
 
 # Arguments
 - `record::GFF3.Record`: GFF3 record to parse
-- `refs::RefGenome`: Reference genome to add the gene to
-- `chrom_lengths::DataFrame`: DataFrame containing chromosome lengths (must have chromosome names in column 1 and lengths in column 2)
-- `using_chrom_file::Bool`: Whether a chromosome lengths file was used
+- `refs::RefGenome`: Reference genome to add the gene to (must have scaffolds already populated)
 - `alt_id_field::Union{String, Nothing}=nothing`: Alternative ID field name (if `nothing`, uses "ID")
 
 # Returns
 - `Nothing`
 """
-function parsegene!(record::GFF3.Record, refs::RefGenome, chrom_lengths::DataFrame, using_chrom_file::Bool; alt_id_field::Union{String, Nothing}=nothing)
+function parsegene!(record::GFF3.Record, refs::RefGenome; alt_id_field::Union{String, Nothing}=nothing)
     scaffold = nothing
     contig = missing
     source = ""
@@ -309,23 +319,11 @@ function parsegene!(record::GFF3.Record, refs::RefGenome, chrom_lengths::DataFra
     region = missing
     chrom_length = 0
     seqid = GFF3.seqid(record)
-    if seqid ∉ chrom_lengths[!, 1]
-        error("chromosome ID '$seqid' not found in chromosome lengths")
+    if !haskey(refs.scaffolds, seqid)
+        error("chromosome/scaffold ID '$seqid' not found in reference genome scaffolds")
     end
-    chrom_ind = findfirst(chrom_lengths[:,1] .== seqid)
-    chrom_length = chrom_lengths[chrom_ind,2]
-    if haskey(refs.scaffolds, seqid)
-        scaffold = refs.scaffolds[seqid]
-    else 
-        refs.scaffolds[seqid] = Scaffold(seqid,
-                                        missing, 
-                                        Gene[],
-                                        Repeat[], 
-                                        missing,
-                                        missing,
-                                        missing)
-        scaffold = refs.scaffolds[seqid]
-    end
+    scaffold = refs.scaffolds[seqid]
+    chrom_length = scaffold.scaffold_end
     try
         source = GFF3.source(record)
     catch

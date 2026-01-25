@@ -159,8 +159,10 @@ const GT = BioinfoTools.GenomeTypes
         # Setup
         gff_file = joinpath(@__DIR__, "data", "NC_003280.10_copy.gff")
         reader = open(GFF3.Reader, gff_file)
-        chrom_lengths = DataFrame(:chrom => ["NC_003280.10"], :length => [15279421])
         refs = GT.RefGenome()
+        
+        # Create scaffold upfront (as loadgff now does)
+        refs.scaffolds["NC_003280.10"] = GT.Scaffold("NC_003280.10", missing, GT.Gene[], GT.Repeat[], 1, 15279421, missing)
         
         # Find a gene record
         gene_record = nothing
@@ -175,7 +177,7 @@ const GT = BioinfoTools.GenomeTypes
         @test !isnothing(gene_record)
         
         # Test successful gene parsing
-        LG.parsegene!(gene_record, refs, chrom_lengths, false)
+        LG.parsegene!(gene_record, refs)
         
         @test length(refs.genes[1]) == 1
         @test length(refs.genes[2]) == 1
@@ -186,9 +188,13 @@ const GT = BioinfoTools.GenomeTypes
         @test gene.strand in ['+', '-']
         @test !isempty(gene.regions)
         @test haskey(refs.scaffolds, "NC_003280.10")
+        # Verify scaffold has proper start and end positions
+        @test refs.scaffolds["NC_003280.10"].scaffold_start == 1
+        @test refs.scaffolds["NC_003280.10"].scaffold_end == 15279421
         
         # Test with alternative ID field
         refs2 = GT.RefGenome()
+        refs2.scaffolds["NC_003280.10"] = GT.Scaffold("NC_003280.10", missing, GT.Gene[], GT.Repeat[], 1, 15279421, missing)
         reader2 = open(GFF3.Reader, gff_file)
         gene_record2 = nothing
         for record in reader2
@@ -199,21 +205,22 @@ const GT = BioinfoTools.GenomeTypes
         end
         close(reader2)
         
-        LG.parsegene!(gene_record2, refs2, chrom_lengths, false; alt_id_field="Name")
+        LG.parsegene!(gene_record2, refs2; alt_id_field="Name")
         @test length(refs2.genes[1]) == 1
         
-        # Test error with chromosome not in chrom_lengths
-        bad_chrom_lengths = DataFrame(:chrom => ["chr99"], :length => [1000])
+        # Test error with scaffold not in refs
         refs3 = GT.RefGenome()
-        @test_throws ErrorException LG.parsegene!(gene_record, refs3, bad_chrom_lengths, false)
+        @test_throws ErrorException LG.parsegene!(gene_record, refs3)
     end
     
     @testset "parserna!" begin
         # Setup - load a gene first
         gff_file = joinpath(@__DIR__, "data", "NC_003280.10_copy.gff")
         reader = open(GFF3.Reader, gff_file)
-        chrom_lengths = DataFrame(:chrom => ["NC_003280.10"], :length => [15279421])
         refs = GT.RefGenome()
+        
+        # Create scaffold upfront (as loadgff now does)
+        refs.scaffolds["NC_003280.10"] = GT.Scaffold("NC_003280.10", missing, GT.Gene[], GT.Repeat[], 1, 15279421, missing)
         
         gene_record = nothing
         rna_record = nothing
@@ -221,7 +228,7 @@ const GT = BioinfoTools.GenomeTypes
         for record in reader
             if GFF3.featuretype(record) == "gene" && isnothing(gene_record)
                 gene_record = record
-                LG.parsegene!(gene_record, refs, chrom_lengths, false)
+                LG.parsegene!(gene_record, refs)
             elseif contains(GFF3.featuretype(record), "RNA") && isnothing(rna_record)
                 rna_record = record
                 break
@@ -257,8 +264,10 @@ const GT = BioinfoTools.GenomeTypes
         # Setup - load gene and RNA first
         gff_file = joinpath(@__DIR__, "data", "NC_003280.10_copy.gff")
         reader = open(GFF3.Reader, gff_file)
-        chrom_lengths = DataFrame(:chrom => ["NC_003280.10"], :length => [15279421])
         refs = GT.RefGenome()
+        
+        # Create scaffold upfront (as loadgff now does)
+        refs.scaffolds["NC_003280.10"] = GT.Scaffold("NC_003280.10", missing, GT.Gene[], GT.Repeat[], 1, 15279421, missing)
         
         gene_record = nothing
         rna_record = nothing
@@ -267,7 +276,7 @@ const GT = BioinfoTools.GenomeTypes
         for record in reader
             if GFF3.featuretype(record) == "gene" && isnothing(gene_record)
                 gene_record = record
-                LG.parsegene!(gene_record, refs, chrom_lengths, false)
+                LG.parsegene!(gene_record, refs)
             elseif contains(GFF3.featuretype(record), "RNA") && isnothing(rna_record)
                 rna_record = record
                 LG.parserna!(rna_record, refs, refs.genes[2][1])
