@@ -1503,16 +1503,35 @@ Perform a two-sided permutation test for correlation between `X` and
 `Y`, using `N` random permutations to estimate the null distribution.
 Returns the observed correlation and permutation-based p-value.
 """
-function perm_cor_2side(X::Vector{Float64}, Y::Vector{Float64}, N::Int=10000)
+function perm_cor_2side(X::Vector{Float64}, Y::Vector{Float64})
+    N = 0
+    @assert length(X) == length(Y) "Vectors X and Y must be the same length."
     original_cor = cor(X, Y)
     Yperm = copy(Y)
     perm_cors = Float64[]
-    for _ in 1:N
-        shuffle!(Yperm)
-        push!(perm_cors, abs(cor(X, Yperm)))
+
+    if length(X) <= 9
+        N = factorial(length(X)) - 1
+        y_perms = collect(permutations(Y))
+        for perm in y_perms
+            push!(perm_cors, abs(cor(X, collect(perm))))
+        end
+    else
+        N = factorial(9) - 1
+        already_added = Set{Vector{Float64}}()
+        iters = 0
+        while length(perm_cors) < N && iters < N * 2
+            shuffle!(Yperm)
+            iters += 1
+            if Yperm in already_added
+                continue
+            end
+            push!(perm_cors, abs(cor(X, Yperm)))
+        end
     end
+    
     return (
-        count(c -> c >= abs(original_cor), perm_cors) / (N + 1),
+        (count(c -> c >= abs(original_cor), perm_cors) + 1) / (N + 1),
         original_cor
     )
 end
