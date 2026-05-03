@@ -82,8 +82,8 @@ function move_to_repeats!(ref_genome::RefGenome, gene_list::Vector{G}) where G<:
             gene.scaffold,
             missing,
             missing,
-            missing,
-            missing,
+            gene.id,
+            "_converted_",
             gene.gene_start,
             gene.gene_end,
             missing,
@@ -99,7 +99,7 @@ function move_to_repeats!(ref_genome::RefGenome, gene_list::Vector{G}) where G<:
     all_ids = [gene.id for gene in gene_list]
     filter!(gene -> gene.id ∉ all_ids, ref_genome.genes[2])
     filter!(gene -> gene ∉ all_ids, ref_genome.genes[1])
-    for (scaffold_name, scaffold) in ref_genome.scaffolds
+    for (_, scaffold) in ref_genome.scaffolds
 
         filter!(gene -> gene.id ∉ all_ids, scaffold.genes)
     end
