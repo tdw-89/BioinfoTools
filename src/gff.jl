@@ -1,4 +1,4 @@
-module LoadGFF
+module GFF
 using GFF3
 using DataFrames
 using GenomicFeatures
@@ -6,7 +6,7 @@ using InteractiveUtils
 using Statistics
 using CSV
 using CodecZlib
-using ..GenomeTypes
+using ..Types
 import Base.replace!
 import BioSequences: BioSequence
 const default_upstream = 2000
@@ -530,4 +530,4 @@ export loadgenome,
        addpromoters!,
        addsequences!,
        addsequence!
-end # module LoadGFF
+end # module GFF

@@ -11,11 +11,11 @@ package docstrings.
 
 ```@docs
 BioinfoTools.BioinfoTools
-BioinfoTools.GenomeTypes
-BioinfoTools.GenomicData
-BioinfoTools.EnrichmentUtils
-BioinfoTools.LoadGFF
-BioinfoTools.ParalogUtils
+BioinfoTools.Types
+BioinfoTools.Data
+BioinfoTools.Enrichment
+BioinfoTools.GFF
+BioinfoTools.Paralogs
 ```
 
 ## BioinfoTools exports
@@ -29,34 +29,34 @@ Order = [:constant, :type, :function, :macro]
 ## Genome types
 
 ```@autodocs
-Modules = [BioinfoTools.GenomeTypes]
+Modules = [BioinfoTools.Types]
 Order = [:type, :function]
 ```
 
 ## Genomic data utilities
 
 ```@autodocs
-Modules = [BioinfoTools.GenomicData]
+Modules = [BioinfoTools.Data]
 Order = [:constant, :type, :function, :macro]
 ```
 
 ## GFF loading helpers
 
 ```@autodocs
-Modules = [BioinfoTools.LoadGFF]
+Modules = [BioinfoTools.GFF]
 Order = [:function]
 ```
 
 ## Enrichment helpers
 
 ```@autodocs
-Modules = [BioinfoTools.EnrichmentUtils]
+Modules = [BioinfoTools.Enrichment]
 Order = [:function]
 ```
 
 ## Paralog analysis utilities
 
 ```@autodocs
-Modules = [BioinfoTools.ParalogUtils]
+Modules = [BioinfoTools.Paralogs]
 Order = [:function]
 ```

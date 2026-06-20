@@ -6,71 +6,71 @@ ones you need individually.
 
 # Submodules
 
-- `GenomeTypes` - core data structures for scaffolds, contigs, genes, regions, and
+- `Types` - core data structures for scaffolds, contigs, genes, regions, and
   associated signal tracks.
-- `GenomicData` - parsers and utilities for working with BAM/BED signals, replicate
+- `Data` - parsers and utilities for working with BAM/BED signals, replicate
   aggregation, and experiment management.
-- `EnrichmentUtils` - helpers for aligning signal windows to genomic features and computing
+- `Enrichment` - helpers for aligning signal windows to genomic features and computing
   enrichment statistics.
-- `LoadGFF` - functions for loading GFF/GFF3 annotations into the in-memory genome types.
-- `ParalogUtils` - reciprocal-best-hit and gene family utilities powered by Graphs.jl.
+- `GFF` - functions for loading GFF/GFF3 annotations into the in-memory genome types.
+- `Paralogs` - reciprocal-best-hit and gene family utilities powered by Graphs.jl.
 """
 module BioinfoTools
 
 # Submodules
-include("genome_types.jl")
-include("genomic_data.jl")
-include("enrichment_utils.jl")
-include("load_gff.jl")
-include("paralog_utils.jl")
-include("alignment_utils.jl")
-include("repeat_utils.jl")
-include("misc_utils.jl")
-using .GenomeTypes
-using .GenomicData
-using .EnrichmentUtils
-using .LoadGFF
-using .ParalogUtils
+include("types.jl")
+include("data.jl")
+include("enrichment.jl")
+include("gff.jl")
+include("paralogs.jl")
+include("alignment.jl")
+include("repeats.jl")
+include("misc.jl")
+using .Types
+using .Data
+using .Enrichment
+using .GFF
+using .Paralogs
 using .AlignmentUtils
 using .RepeatUtils
 using .MiscUtils
 
 @doc raw"""
-    GenomeTypes
+    Types
 
 Data structures representing scaffolds, contigs, genes, regulatory regions, and the
 signals attached to them. These typed containers keep coordinates, annotations, and
 signals bundled for downstream analyses.
-""" GenomeTypes
+""" Types
 @doc raw"""
-    GenomicData
+    Data
 
 Tools for streaming BAM/BED data, aggregating replicates, binning peaks, and attaching
 signals back to annotated genome objects.
-""" GenomicData
+""" Data
 @doc raw"""
-    EnrichmentUtils
+    Enrichment
 
 Helper routines for carving promoter/TSS/TES windows, validating requested regions, and
 extracting signal slices suitable for downstream enrichment or plotting workflows.
-""" EnrichmentUtils
+""" Enrichment
 @doc raw"""
-    LoadGFF
+    GFF
 
 Readers that convert one or more GFF/GFF3 files (plain or gzipped) into `RefGenome`
 objects populated with genes, transcripts, and optional repeats.
-""" LoadGFF
+""" GFF
 @doc raw"""
-    ParalogUtils
+    Paralogs
 
 Utilities for discovering reciprocal best hits, building paralog graphs, and exporting
 gene family relationships for further network analysis.
-""" ParalogUtils
-export GenomeTypes, 
-        GenomicData, 
-        EnrichmentUtils, 
-        LoadGFF, 
-        ParalogUtils,
+""" Paralogs
+export Types, 
+        Data, 
+        Enrichment, 
+        GFF, 
+        Paralogs,
         AlignmentUtils,
         RepeatUtils,
         MiscUtils

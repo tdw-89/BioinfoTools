@@ -2,9 +2,9 @@ using Test
 using DataFrames
 using Graphs
 using MetaGraphs
-using BioinfoTools.ParalogUtils
+using BioinfoTools.Paralogs
 
-@testset "ParalogUtils Tests" begin
+@testset "Paralogs Tests" begin
 
     # ========================================
     # Tests for rbh()

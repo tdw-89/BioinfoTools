@@ -4,8 +4,8 @@ module RepeatUtils
 Utilities for handling repeat data like transposable elements.
 """
 
-using ..GenomeTypes
-using ..GenomicData
+using ..Types
+using ..Data
 using CodecZlib
 using CSV
 using DataFrames
@@ -118,7 +118,7 @@ function findoverlappinggenes(repeat_elem::Repeat)
         gene_start = gene.gene_start
         gene_end = gene.gene_end
 
-        if GenomeTypes.hasoverlap(repeat_start, gene_start, repeat_end, gene_end)
+        if Types.hasoverlap(repeat_start, gene_start, repeat_end, gene_end)
 
             push!(overlap_ids, gene.id)
             push!(repeat_type, repeat_elem.type)

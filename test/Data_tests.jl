@@ -1,7 +1,7 @@
-include("../src/genomic_data.jl")
-using .GenomicData
+include("../src/data.jl")
+using .Data
 using Test
-@testset "GenomicData Types" begin
+@testset "Data Types" begin
     chrom = ChromData("chr1", UInt16[1, 2, 3, 4])
     @test chrom.name == "chr1"
     @test chrom.signal isa Vector{UInt16}

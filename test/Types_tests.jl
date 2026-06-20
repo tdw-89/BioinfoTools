@@ -1,8 +1,8 @@
 using Test
 using BioSequences
 using BioinfoTools
-const GT = BioinfoTools.GenomeTypes
-@testset "GenomeTypes" begin
+const GT = BioinfoTools.Types
+@testset "Types" begin
     @testset "Scaffold and Contig Construction" begin
         scaffold = GT.Scaffold("scaf1", Vector{GT.Feature}(), missing, missing, 1, 1_000, "chromosome")
         @test scaffold.name == "scaf1"

@@ -1,4 +1,4 @@
-module ParalogUtils
+module Paralogs
 
 """
 Utilities for analyzing paralogous gene relationships.
@@ -619,4 +619,4 @@ export rbh,
     create_weighted_graph, 
     savegraphcsv
 
-end # module ParalogUtils
+end # module Paralogs

@@ -1,4 +1,4 @@
-module EnrichmentUtils
+module Enrichment
 #= 
     This module contains a set of functions useful for calculating and plotting
     enrichment of peaks (from ChIP, ATAC, etc.) or calculating peak coverage
@@ -15,8 +15,8 @@ using Random
 using Statistics
 using DataFrames
 using Combinatorics
-using ..GenomeTypes
-using ..GenomicData
+using ..Types
+using ..Data
 
 const FLOAT_RE = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
 const LBOUND_RE = r"[\[(]{1}"
@@ -562,7 +562,7 @@ function plot_enrich_region(
             continue
         end
         n_quantiles = length(unique(gene_ds_quantiles))
-        x_range = GenomeTypes.to_vector(group_regions[i])
+        x_range = Types.to_vector(group_regions[i])
         positional_count_mat = zeros(length(x_range), n_quantiles)
         for d in 1:n_quantiles
             # Find the indices of all the gene pairs in the paralog df whose ds is in quantile 'd'.
@@ -815,7 +815,7 @@ function plot_enrich_expr_region(
         end
         expr_df_quantiles = @pipe copy(expr_df) |> insertcols!(_, :quantile => gene_expr_quantiles)
         n_quantiles = length(unique(gene_expr_quantiles))
-        x_range = GenomeTypes.to_vector(group_regions[i])
+        x_range = Types.to_vector(group_regions[i])
         positional_count_mat = zeros(length(x_range), n_quantiles)
         for d in 1:n_quantiles
             gene_inds = findall(expr_df_quantiles.quantile .== d)
@@ -1550,8 +1550,8 @@ function get_cor(paralog_df::DataFrame,
     XS = []
     YS = []
     for sample_ind in sample_inds
-        genes = GenomeTypes.get(genome, collect(paralog_df.GeneID))
-        paralogs = GenomeTypes.get(genome, collect(paralog_df.ParalogID))
+        genes = Types.get(genome, collect(paralog_df.GeneID))
+        paralogs = Types.get(genome, collect(paralog_df.ParalogID))
         enrich_vals_gene = [!siginrange(gene, gene_range) ? missing : mean(getsiginrange(gene, gene_range, sample_ind)) for gene in genes]
         enrich_vals_paralog = [!siginrange(paralog, gene_range) ? missing : mean(getsiginrange(paralog, gene_range, sample_ind)) for paralog in paralogs]
         enrich_means = [(!ismissing(pair[1]) && !ismissing(pair[2])) ? mean(pair) / global_mean : missing for pair in zip(enrich_vals_gene, enrich_vals_paralog)]
@@ -1581,7 +1581,7 @@ function get_cor_expr(expr_df::DataFrame,
     XS = []
     YS = []
     for sample_ind in sample_inds
-        genes = GenomeTypes.get(genome, collect(expr_df.GeneID))
+        genes = Types.get(genome, collect(expr_df.GeneID))
         xs = [getsiginrange(gene, gene_range, sample_ind) for gene in genes]
         ys = [expr_df.Avg[i] for (i, gene_sig) in enumerate(xs) if !ismissing(gene_sig)]
         push!(XS, mean.(collect(skipmissing(xs))))

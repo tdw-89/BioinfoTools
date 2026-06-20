@@ -3,10 +3,10 @@ using BioinfoTools
 using DataFrames
 using GFF3
 
-const LG = BioinfoTools.LoadGFF
-const GT = BioinfoTools.GenomeTypes
+const LG = BioinfoTools.GFF
+const GT = BioinfoTools.Types
 
-@testset "LoadGFF" begin
+@testset "GFF" begin
     
     @testset "get_id - String parsing" begin
         # Test ID with gene: prefix

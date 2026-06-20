@@ -2,8 +2,8 @@
 CurrentModule = BioinfoTools
 DocTestSetup = quote
     using BioinfoTools
-    using BioinfoTools.LoadGFF
-    using BioinfoTools.GenomicData
+    using BioinfoTools.GFF
+    using BioinfoTools.Data
 end
 ```
 
@@ -17,8 +17,8 @@ submodules you need into scope; the rest of this manual enumerates their exporte
 
 ```julia
 using BioinfoTools
-using BioinfoTools.LoadGFF
-using BioinfoTools.GenomicData
+using BioinfoTools.GFF
+using BioinfoTools.Data
 
 ref = loadgenome("data/annotations.gff3"; feature_type = "gene")
 experiment = getallcountvectors(["data/alignments/sample.bam"], exp_name = "demo")
@@ -26,8 +26,8 @@ addtogenes!(ref, experiment; peak_data = false)
 ```
 
 ```julia
-using BioinfoTools.EnrichmentUtils
-using BioinfoTools.ParalogUtils
+using BioinfoTools.Enrichment
+using BioinfoTools.Paralogs
 
 promoter = getrange(first(last(ref.genes)), "promoter")
 promoter_signal = getsiginrange(first(last(ref.genes)), promoter; peak_data = false)

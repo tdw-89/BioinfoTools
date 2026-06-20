@@ -1,11 +1,11 @@
-module GenomicData
+module Data
 using StatsBase
 using DataFrames
 using XAM
 using CSV
 using CodecZlib: GzipDecompressorStream
 using BED
-import ..GenomeTypes: RNA, Exon, Intron, RefGenome, Gene
+import ..Types: RNA, Exon, Intron, RefGenome, Gene
 export ChromData,
     SampleData,
     Experiment,
@@ -645,4 +645,4 @@ function distance(geneA::Gene, geneB::Gene)
         return 0
     end
 end
-end # module GenomicData
+end # module Data

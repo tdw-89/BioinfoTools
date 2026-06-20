@@ -5,8 +5,8 @@ import Interpolations: AbstractInterpolation
 Base.getindex(itp::AbstractInterpolation, r::AbstractVector{<:Real}) = [itp[x] for x in r]
 Base.getindex(itp::AbstractInterpolation, r::AbstractRange{<:Real}) = [itp[x] for x in r]
 Base.getindex(itp::AbstractInterpolation, x::Real) = itp(x)
-const GT = BioinfoTools.GenomeTypes
-const EU = BioinfoTools.EnrichmentUtils
+const GT = BioinfoTools.Types
+const EU = BioinfoTools.Enrichment
 function build_gene(; strand='+', region_len=800, gene_start=400, gene_end=520, binsignal::BitVector=BitVector(fill(false, region_len)))
     scaffold = GT.Scaffold("chr1", GT.Feature[], GT.Feature[], GT.Feature[], 1, region_len, "chromosome")
     signal_collection = nothing
@@ -37,7 +37,7 @@ function build_gene(; strand='+', region_len=800, gene_start=400, gene_end=520, 
         ["sample"],
     )
 end
-@testset "EnrichmentUtils.getrange" begin
+@testset "Enrichment.getrange" begin
     @testset "Upstream positive strand" begin
         gene = build_gene(strand='+', gene_start=400, binsignal=BitVector(fill(true, 800)))
         range = EU.getrange(gene, "upstream")
@@ -59,7 +59,7 @@ end
         @test_throws ErrorException EU.getrange(gene, "invalid")
     end
 end
-@testset "EnrichmentUtils.to_percent" begin
+@testset "Enrichment.to_percent" begin
     @testset "Resample linear signal" begin
         signal = collect(0.0:99.0)
         percent = EU.to_percent(signal)
@@ -72,7 +72,7 @@ end
         @test percent == signal
     end
 end
-@testset "EnrichmentUtils.getsiginrange" begin
+@testset "Enrichment.getsiginrange" begin
     @testset "Positive strand slice" begin
         bins = BitVector([i <= 60 for i in 1:800])
         gene = build_gene(strand='+', gene_start=300, gene_end=420, binsignal=bins)
@@ -109,7 +109,7 @@ end
         @test result == bins[expected_start:expected_stop]
     end
 end
-@testset "EnrichmentUtils.siginrange" begin
+@testset "Enrichment.siginrange" begin
     @testset "Range within bounds" begin
         bins = BitVector(fill(true, 200))
         gene = build_gene(strand='+', gene_start=100, gene_end=180, binsignal=bins)

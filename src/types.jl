@@ -1,4 +1,9 @@
-module GenomeTypes
+"""
+    types.jl
+Defines the core data structures representing genomic features and any associated measurements (signals, annotations, sequences) used throughout the BioinfoTools.jl package.
+These types are designed to be flexible, allowing for missing data and optional fields while maintaining a consistent interface.
+"""
+module Types
 using BioSequences
 abstract type Feature end
 abstract type RegElement <: Feature end

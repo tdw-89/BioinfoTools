@@ -1,3 +1,6 @@
 /docs/build/
 Manifest.toml
 *.html
+*.heapsnapshot
+compile_trace.jl
+*.so
