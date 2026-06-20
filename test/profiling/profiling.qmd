@@ -1,7 +1,7 @@
 ---
 engine: julia
 julia:
-  exeflags: ["--project=../", "--threads=auto", "--sysimage=BioinfoTools_sysimage.so"]
+  exeflags: ["--project=../..", "--threads=auto", "--sysimage=BioinfoTools_sysimage.so"]
 format:
   html:
     toc: true
@@ -14,11 +14,14 @@ theme: sandstone
 
 # Common libraries
 using BioinfoTools
-using Profiler
-using 
+using Profile
+using CairoMakie
 
-# Test
+# Test data
+genome_file = joinpath(@__DIR__, "../data/genomic.gff.gz")
 
+# Helper functions
+rnd(x) = round(x, digits=1)
 ```
 
 # BioifnoTools Profiling
@@ -30,5 +33,20 @@ This document contains profiling information for BioinfoTools. It is organized i
 
 ## GFF
 ```{julia}
+#| echo: true
+#| output: false
 
+# warmup
+test_genome = GFF.loadgenome(genome_file, feature_type="all")
+test_genome = nothing
+GC.gc()
+
+# profile
+allocs_mini = @allocations GFF.loadgenome(genome_file)
+allocs_full = @allocations GFF.loadgenome(genome_file, feature_type="all")
 ```
+
+### `loadgenome`
+| Input (size) | Bytes Allocated (mini) | Bytes Allocated (full) |
+|---|---|---|---|
+| genomic.gff.gz (`{julia} genome_file |> filesize |> rnd`) | `{julia} allocs_mini |> rnd` | `{julia} allocs_full |> rnd` |

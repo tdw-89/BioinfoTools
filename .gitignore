@@ -4,3 +4,4 @@ Manifest.toml
 *.heapsnapshot
 compile_trace.jl
 *.so
+/test/profiling/profiling_files
