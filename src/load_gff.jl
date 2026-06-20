@@ -56,6 +56,7 @@ function parseattributes(attrs::Vector{Pair{String, Vector{String}}})
     dict = Dict(attr_names .=> attr_values)
     return dict
 end
+
 """
     get_id(id_string)
 
@@ -349,15 +350,14 @@ function parsegene!(record::GFF3.Record, refs::RefGenome; alt_id_field::Union{St
     catch
         nothing
     end
-    attrs = GFF3.attributes(record)
-    dict = parseattributes(attrs)
+    attrs_dict = record |> GFF3.attributes |> Dict
     id_field = isnothing(alt_id_field) ? "ID" : alt_id_field
-    id = get_id(id_field, dict)
+    id = get_id(id_field, attrs_dict)
     if isnothing(id)
         return nothing
     end
-    if  "Name" in keys(dict)
-        name = dict["Name"][1]
+    if  "Name" in keys(attrs_dict)
+        name = attrs_dict["Name"][1]
     end
     # Add default region, which stretches 'default_upstream' bases down
     # from 'gene_start', and 'default_downstream' bases up from 'gene_end'
