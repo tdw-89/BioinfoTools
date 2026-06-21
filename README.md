@@ -12,3 +12,4 @@
 
 ### Walking wounded 🩼
 - Remove PlotlyJS (after switch to Makie is complete)
+- Move profiling-only libraries (like PProf) to a dedicated sub-project if possible

@@ -5,3 +5,4 @@ Manifest.toml
 compile_trace.jl
 *.so
 /test/profiling/profiling_files
+*.pb.gz

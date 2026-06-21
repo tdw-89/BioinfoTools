@@ -3,9 +3,8 @@ engine: julia
 julia:
   exeflags: ["--project=../..", "--threads=auto", "--sysimage=BioinfoTools_sysimage.so"]
 format:
-  html:
-    toc: true
-    html-math-method: katex
+  gfm:
+    html-math-method: webtex
 theme: sandstone
 ---
 

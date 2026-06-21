@@ -14,7 +14,13 @@ const _MaybeChar = Union{Char, Missing}
 const _MaybeFeatureVector = Union{AbstractVector{<:Feature}, Missing}
 const _MaybeRegElementVector = Union{AbstractVector{<:RegElement}, Missing}
 const _SignalCollection = Union{
-    Vector{Union{Vector{UInt8}, Vector{UInt16}, Vector{UInt32}, Vector{UInt64}, Vector{Float64}}},
+    Vector{Union{
+        Vector{UInt8}, 
+        Vector{UInt16}, 
+        Vector{UInt32}, 
+        Vector{UInt64}, 
+        Vector{Float64}
+        }},
     Nothing,
 }
 const _BitSignalCollection = Union{Vector{BitVector}, Nothing}
